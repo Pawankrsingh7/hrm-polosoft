@@ -385,6 +385,13 @@ class OnboardingForm {
                 break;
 
             case 'text':
+                if (input.id === 'employeeId') {
+                    const employeeIdRegex = /^[A-Za-z][0-9]{5}$/;
+                    if (!employeeIdRegex.test(value.trim())) {
+                        isValid = false;
+                        errorMessage = 'Please enter a valid employee ID (example: A12345)';
+                    }
+                }
                 if (input.id === 'aadharNumber') {
                     const aadharRegex = /^[0-9]{12}$/;
                     if (!aadharRegex.test(value.replace(/\s/g, ''))) {
@@ -1830,9 +1837,10 @@ class OnboardingForm {
                     <h6 class="text-primary"><i class="fas fa-user me-2"></i>Personal Information</h6>
                     <div class="row">
                         <div class="col-md-6"><strong>Salutation:</strong> ${displayValue(formData.personal.salutation)}</div>
+                        <div class="col-md-6"><strong>Employee ID:</strong> ${displayValue(formData.personal.employeeId)}</div>
                         <div class="col-md-6"><strong>Full Name:</strong> ${displayValue(formData.personal.fullName)}</div>
                         <div class="col-md-6"><strong>Father's Name:</strong> ${displayValue(formData.personal.fatherName)}</div>
-                        <div class="col-md-6"><strong>Contact:</strong> ${displayValue(formData.personal.contactNumber)}</div>
+                        <div class="col-md-6"><strong>Contact Number:</strong> ${displayValue(formData.personal.contactNumber)}</div>
                         <div class="col-md-6"><strong>Gender:</strong> ${displayValue(formData.personal.gender)}</div>
                         <div class="col-md-6"><strong>Marital Status:</strong> ${displayValue(formData.personal.maritalStatus)}</div>
                         <div class="col-md-6"><strong>Date of Birth:</strong> ${displayValue(formData.personal.dateOfBirth)}</div>
@@ -1932,6 +1940,7 @@ class OnboardingForm {
         return {
             personal: {
                 salutation: document.getElementById('salutation')?.value || '',
+                employeeId: document.getElementById('employeeId')?.value || '',
                 fullName: document.getElementById('fullName')?.value || '',
                 fatherName: document.getElementById('fatherName')?.value || '',
                 contactNumber: document.getElementById('contactNumber')?.value || '',
