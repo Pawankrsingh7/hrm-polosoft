@@ -1977,8 +1977,8 @@ class OnboardingForm {
         this.showNotification('Submitting your application...', 'info');
 
         try {
-            // API endpoint - Replace with your ERPNext API endpoint
-            const apiEndpoint = 'https://your-erpnext-instance/api/method/custom_api.onboarding_submit';
+            // Same-origin API endpoint served by Express backend
+            const apiEndpoint = '/api/onboarding/submit';
 
             // Prepare data for submission
             const submitData = {
@@ -1993,7 +1993,6 @@ class OnboardingForm {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
                 },
                 body: JSON.stringify(submitData)
             });
@@ -2019,12 +2018,13 @@ class OnboardingForm {
                 }, 1000);
 
             } else {
-                throw new Error('Submission failed');
+                const errorBody = await response.json().catch(() => ({}));
+                throw new Error(errorBody.message || 'Submission failed');
             }
 
         } catch (error) {
             console.error('API Error:', error);
-            this.showNotification('Failed to submit application. Please try again.', 'error');
+            this.showNotification(`Failed to submit application. ${error.message}`, 'error');
         }
     }
 
