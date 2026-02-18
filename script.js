@@ -1823,16 +1823,49 @@ class OnboardingForm {
         if (!summaryContent) return;
 
         const formData = this.collectFormData();
+        const displayValue = (value) => value && String(value).trim() ? value : 'N/A';
 
         let html = `
                 <div class="summary-section mb-4">
                     <h6 class="text-primary"><i class="fas fa-user me-2"></i>Personal Information</h6>
                     <div class="row">
-                        <div class="col-md-6"><strong>Full Name:</strong> ${formData.personal.fullName}</div>
-                        <div class="col-md-6"><strong>Contact:</strong> ${formData.personal.contactNumber}</div>
-                        <div class="col-md-6"><strong>Personal Email:</strong> ${formData.address.personalEmail}</div>
-                        <div class="col-md-6"><strong>Company Email:</strong> ${formData.address.companyEmail}</div>
-                        <div class="col-md-6"><strong>Aadhar:</strong> ${formData.identification.aadharNumber}</div>
+                        <div class="col-md-6"><strong>Salutation:</strong> ${displayValue(formData.personal.salutation)}</div>
+                        <div class="col-md-6"><strong>Full Name:</strong> ${displayValue(formData.personal.fullName)}</div>
+                        <div class="col-md-6"><strong>Father's Name:</strong> ${displayValue(formData.personal.fatherName)}</div>
+                        <div class="col-md-6"><strong>Contact:</strong> ${displayValue(formData.personal.contactNumber)}</div>
+                        <div class="col-md-6"><strong>Gender:</strong> ${displayValue(formData.personal.gender)}</div>
+                        <div class="col-md-6"><strong>Marital Status:</strong> ${displayValue(formData.personal.maritalStatus)}</div>
+                        <div class="col-md-6"><strong>Date of Birth:</strong> ${displayValue(formData.personal.dateOfBirth)}</div>
+                        <div class="col-md-6"><strong>Blood Group:</strong> ${displayValue(formData.personal.bloodGroup)}</div>
+                    </div>
+                </div>
+            `;
+
+        html += `
+                <div class="summary-section mb-4">
+                    <h6 class="text-primary"><i class="fas fa-home me-2"></i>Address Details</h6>
+                    <div class="row">
+                        <div class="col-md-6"><strong>Current Address:</strong> ${displayValue(formData.address.currentAddress)}</div>
+                        <div class="col-md-6"><strong>Permanent Address:</strong> ${displayValue(formData.address.permanentAddress)}</div>
+                        <div class="col-md-6"><strong>Personal Email:</strong> ${displayValue(formData.address.personalEmail)}</div>
+                        <div class="col-md-6"><strong>Company Email:</strong> ${displayValue(formData.address.companyEmail)}</div>
+                        <div class="col-md-6"><strong>Country:</strong> ${displayValue(formData.address.country)}</div>
+                        <div class="col-md-6"><strong>State:</strong> ${displayValue(formData.address.state)}</div>
+                        <div class="col-md-6"><strong>District:</strong> ${displayValue(formData.address.district)}</div>
+                        <div class="col-md-6"><strong>City:</strong> ${displayValue(formData.address.city)}</div>
+                        <div class="col-md-6"><strong>Pincode:</strong> ${displayValue(formData.address.pincode)}</div>
+                    </div>
+                </div>
+            `;
+
+        html += `
+                <div class="summary-section mb-4">
+                    <h6 class="text-primary"><i class="fas fa-id-card me-2"></i>Identification Details</h6>
+                    <div class="row">
+                        <div class="col-md-6"><strong>Aadhar Number:</strong> ${displayValue(formData.identification.aadharNumber)}</div>
+                        <div class="col-md-6"><strong>PAN Number:</strong> ${displayValue(formData.identification.panNumber)}</div>
+                        <div class="col-md-6"><strong>Passport Number:</strong> ${displayValue(formData.identification.passportNumber)}</div>
+                        <div class="col-md-6"><strong>Passport Valid Upto:</strong> ${displayValue(formData.identification.passportValidUpto)}</div>
                     </div>
                 </div>
             `;
