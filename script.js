@@ -33,6 +33,7 @@ class OnboardingForm {
         this.addProgressBarClickHandlers();
         this.setupExperienceValidationRules();
         this.updateProgress();
+        this.updateHighestQualificationField();
         console.log('Onboarding Form initialized successfully');
     }
 
@@ -70,7 +71,7 @@ class OnboardingForm {
 
     // Navigate to specific section
     navigateToSection(sectionNumber) {
-        if (sectionNumber < 1 || sectionNumber > 5) return;
+        if (sectionNumber < 1 || sectionNumber > 6) return;
 
         // Validate all previous sections before moving
         let canNavigate = true;
@@ -246,6 +247,10 @@ class OnboardingForm {
             }
             if (e.target.classList.contains('qualification')) {
                 this.handleQualificationChange(e.target);
+                this.updateHighestQualificationField();
+            }
+            if (e.target.classList.contains('year-of-passing')) {
+                this.updateHighestQualificationField();
             }
         });
 
@@ -399,11 +404,25 @@ class OnboardingForm {
                         errorMessage = 'Please enter a valid 12-digit Aadhar number';
                     }
                 }
+                if (input.id === 'uanNumber' && value) {
+                    const uanRegex = /^[0-9]{12}$/;
+                    if (!uanRegex.test(value.replace(/\s/g, ''))) {
+                        isValid = false;
+                        errorMessage = 'Please enter a valid 12-digit UAN number';
+                    }
+                }
                 if (input.id === 'panNumber' && value) {
                     const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
                     if (!panRegex.test(value.toUpperCase())) {
                         isValid = false;
                         errorMessage = 'Please enter a valid PAN number';
+                    }
+                }
+                if (input.id === 'ifscCode' && value) {
+                    const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+                    if (!ifscRegex.test(value.toUpperCase())) {
+                        isValid = false;
+                        errorMessage = 'Please enter a valid IFSC code';
                     }
                 }
                 if (input.id === 'pincode') {
@@ -1142,6 +1161,7 @@ class OnboardingForm {
     }
 
         this.educationCount++;
+        this.updateHighestQualificationField();
     }
 
     // Remove education entry
@@ -1173,6 +1193,7 @@ class OnboardingForm {
 
             // Re-index remaining entries
             this.reindexEducationEntries();
+            this.updateHighestQualificationField();
 
             this.showNotification('Education entry removed successfully', 'success');
         }
@@ -1224,6 +1245,36 @@ class OnboardingForm {
         });
 
         this.educationCount = entries.length;
+    }
+
+    getHighestQualificationFromEntries() {
+        const entries = document.querySelectorAll('.education-entry');
+        let latestTimestamp = -Infinity;
+        let highestQualification = '';
+
+        entries.forEach((entry) => {
+            const yearValue = entry.querySelector('.year-of-passing')?.value || '';
+            const qualificationValue = entry.querySelector('.qualification')?.value || '';
+            if (!yearValue || !qualificationValue) return;
+
+            const parsedDate = new Date(yearValue);
+            const timestamp = parsedDate.getTime();
+            if (Number.isNaN(timestamp)) return;
+
+            if (timestamp >= latestTimestamp) {
+                latestTimestamp = timestamp;
+                highestQualification = qualificationValue;
+            }
+        });
+
+        return highestQualification;
+    }
+
+    updateHighestQualificationField() {
+        const highestQualificationInput = document.getElementById('highestQualification');
+        if (!highestQualificationInput) return;
+
+        highestQualificationInput.value = this.getHighestQualificationFromEntries();
     }
 
 
@@ -1575,7 +1626,7 @@ class OnboardingForm {
         });
         
         // Special handling for section 4 (Work Experience)
-        if (section === 4) {
+        if (section === 5) {
             const hasExperienceYes = document.getElementById('hasExperienceYes');
             const hasExperienceNo = document.getElementById('hasExperienceNo');
             
@@ -1727,7 +1778,7 @@ class OnboardingForm {
             }
             
             // Skip validation for file inputs in sections other than 2 and 4
-            if (input.type === 'file' && section !== 2 && section !== 4) {
+            if (input.type === 'file' && section !== 2 && section !== 5) {
                 return;
             }
             
@@ -1797,7 +1848,7 @@ class OnboardingForm {
     }
 
     updateProgress() {
-        const progress = (this.currentSection / 5) * 100;
+        const progress = (this.currentSection / 6) * 100;
         const progressBar = document.getElementById('formProgress');
         if (progressBar) {
             progressBar.style.width = `${progress}%`;
@@ -1816,7 +1867,7 @@ class OnboardingForm {
     async handleSubmit(e) {
         e.preventDefault();
 
-        if (!this.validateSection(5)) {
+        if (!this.validateSection(6)) {
             this.showNotification('Please complete all required fields and accept terms', 'error');
             return;
         }
@@ -1871,9 +1922,22 @@ class OnboardingForm {
                     <h6 class="text-primary"><i class="fas fa-id-card me-2"></i>Identification Details</h6>
                     <div class="row">
                         <div class="col-md-6"><strong>Aadhar Number:</strong> ${displayValue(formData.identification.aadharNumber)}</div>
+                        <div class="col-md-6"><strong>UAN Number:</strong> ${displayValue(formData.identification.uanNumber)}</div>
                         <div class="col-md-6"><strong>PAN Number:</strong> ${displayValue(formData.identification.panNumber)}</div>
                         <div class="col-md-6"><strong>Passport Number:</strong> ${displayValue(formData.identification.passportNumber)}</div>
                         <div class="col-md-6"><strong>Passport Valid Upto:</strong> ${displayValue(formData.identification.passportValidUpto)}</div>
+                    </div>
+                </div>
+            `;
+
+        html += `
+                <div class="summary-section mb-4">
+                    <h6 class="text-primary"><i class="fas fa-building-columns me-2"></i>Bank Details</h6>
+                    <div class="row">
+                        <div class="col-md-6"><strong>Bank Name:</strong> ${displayValue(formData.bank.bankName)}</div>
+                        <div class="col-md-6"><strong>Account No:</strong> ${displayValue(formData.bank.accountNumber)}</div>
+                        <div class="col-md-6"><strong>IFSC Code:</strong> ${displayValue(formData.bank.ifscCode)}</div>
+                        <div class="col-md-6"><strong>Bank Holder Name:</strong> ${displayValue(formData.bank.bankHolderName)}</div>
                     </div>
                 </div>
             `;
@@ -1882,6 +1946,7 @@ class OnboardingForm {
             html += `
                     <div class="summary-section mb-4">
                         <h6 class="text-primary"><i class="fas fa-graduation-cap me-2"></i>Education Details</h6>
+                        <div class="col-md-12 mb-2"><strong>Highest Qualification:</strong> ${displayValue(formData.other.highestQualification)}</div>
                         ${formData.education.map(edu => `
                             <div class="education-summary mb-2 p-2 bg-light rounded">
                                 <strong>${edu.level}</strong> - ${edu.qualification}<br>
@@ -1962,13 +2027,21 @@ class OnboardingForm {
             },
             identification: {
                 aadharNumber: document.getElementById('aadharNumber')?.value || '',
+                uanNumber: document.getElementById('uanNumber')?.value || '',
                 panNumber: document.getElementById('panNumber')?.value || '',
                 passportNumber: document.getElementById('passportNumber')?.value || '',
                 passportValidUpto: document.getElementById('passportValidUpto')?.value || ''
             },
+            bank: {
+                bankName: document.getElementById('bankName')?.value || '',
+                accountNumber: document.getElementById('accountNumber')?.value || '',
+                ifscCode: (document.getElementById('ifscCode')?.value || '').toUpperCase(),
+                bankHolderName: document.getElementById('bankHolderName')?.value || ''
+            },
             education: this.collectEducationData(),
             experience: this.collectExperienceData(),
             other: {
+                highestQualification: document.getElementById('highestQualification')?.value || '',
                 detailsConfirmation: document.getElementById('detailsConfirmation')?.checked || false
             }
         };

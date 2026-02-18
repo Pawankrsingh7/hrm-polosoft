@@ -103,6 +103,7 @@
       const personal = payload.personal || {};
       const address = payload.address || {};
       const identification = payload.identification || {};
+      const bank = payload.bank || {};
       const education = Array.isArray(payload.education) ? payload.education : [];
       const experience = Array.isArray(payload.experience) ? payload.experience : [];
       const other = payload.other || {};
@@ -136,9 +137,16 @@
         `)}
         ${block("Identification", `
           ${item("Aadhar Number", identification.aadharNumber)}
+          ${item("UAN Number", identification.uanNumber)}
           ${item("PAN Number", identification.panNumber)}
           ${item("Passport Number", identification.passportNumber)}
           ${item("Passport Valid Upto", identification.passportValidUpto)}
+        `)}
+        ${block("Bank Details", `
+          ${item("Bank Name", bank.bankName)}
+          ${item("Account No", bank.accountNumber)}
+          ${item("IFSC Code", bank.ifscCode)}
+          ${item("Bank Holder Name", bank.bankHolderName)}
         `)}
         ${block("Other Information", `
           ${item("Details Confirmation", other.detailsConfirmation ? "Yes" : "No")}

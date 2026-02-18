@@ -30,11 +30,12 @@
       <!-- Progress Bar -->
       <div class="progress-container mb-4">
         <div class="progress" style="height: 8px">
-          <div class="progress-bar" id="formProgress" role="progressbar" style="width: 20%"></div>
+          <div class="progress-bar" id="formProgress" role="progressbar" style="width: 16.67%"></div>
         </div>
         <div class="progress-steps d-flex justify-content-between mt-2">
           <span class="step active">Personal Info</span>
           <span class="step">Address & ID</span>
+          <span class="step">Bank Details</span>
           <span class="step">Education</span>
           <span class="step">Experience</span>
           <span class="step">Other Info</span>
@@ -304,7 +305,7 @@
           </div>
 
           <div class="row g-3 mt-2">
-            <div class="col-md-3">
+            <div class="col-md-2">
               <div class="floating-input">
                 <label for="pincode">Pincode</label>
                 <input type="text" id="pincode" placeholder="Enter 6-digit pincode" pattern="[0-9]{6}" required />
@@ -324,6 +325,15 @@
             </div>
             <div class="col-md-3">
               <div class="floating-input">
+                <label for="uanNumber">UAN Number</label>
+                <input type="text" id="uanNumber" placeholder="Enter 12-digit UAN" pattern="[0-9]{12}" />
+                <div class="invalid-feedback">
+                  Please enter valid 12-digit UAN number
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="floating-input">
                 <label for="panNumber">PAN Number</label>
                 <input type="text" id="panNumber" placeholder="Enter PAN number" pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" />
                 <div class="invalid-feedback">
@@ -331,15 +341,15 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <div class="row g-3 mt-2">
             <div class="col-md-3">
               <div class="floating-input">
                 <label for="passportNumber">Passport Number</label>
                 <input type="text" id="passportNumber" placeholder="Enter passport number" />
               </div>
             </div>
-          </div>
-
-          <div class="row g-3 mt-2">
             <div class="col-md-3">
               <div class="floating-input">
                 <label for="passportValidUpto">Passport Valid Upto</label>
@@ -353,13 +363,56 @@
               <i class="fas fa-arrow-left me-2"></i>Previous
             </button>
             <button type="button" class="btn btn-next" onclick="onboardingForm.nextSection(3)">
+              Next: Bank Details <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Section 3: Bank Details -->
+        <div class="form-section" id="section3">
+          <div class="section-header">
+            <i class="fas fa-building-columns me-2"></i>Bank Details
+          </div>
+
+          <div class="row g-3 mt-3">
+            <div class="col-md-3">
+              <div class="floating-input">
+                <label for="bankName">Bank Name</label>
+                <input type="text" id="bankName" placeholder="Enter bank name" />
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="floating-input">
+                <label for="accountNumber">Account No</label>
+                <input type="text" id="accountNumber" placeholder="Enter account number" />
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="floating-input">
+                <label for="ifscCode">IFSC Code</label>
+                <input type="text" id="ifscCode" placeholder="Enter IFSC code" />
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="floating-input">
+                <label for="bankHolderName">Bank Holder Name</label>
+                <input type="text" id="bankHolderName" placeholder="Enter account holder name" />
+              </div>
+            </div>
+          </div>
+
+          <div class="section-navigation mt-4">
+            <button type="button" class="btn btn-prev" onclick="onboardingForm.prevSection(2)">
+              <i class="fas fa-arrow-left me-2"></i>Previous
+            </button>
+            <button type="button" class="btn btn-next" onclick="onboardingForm.nextSection(4)">
               Next: Education Details <i class="fas fa-arrow-right ms-2"></i>
             </button>
           </div>
         </div>
 
-        <!-- Section 3: Educational Details -->
-        <div class="form-section" id="section3">
+        <!-- Section 4: Educational Details -->
+        <div class="form-section" id="section4">
           <div class="section-header">
             <i class="fas fa-graduation-cap me-2"></i>Educational Details
           </div>
@@ -438,18 +491,27 @@
             </button>
           </div>
 
+          <div class="row g-3 mt-2">
+            <div class="col-md-6">
+              <div class="floating-input">
+                <label for="highestQualification">Highest Qualification</label>
+                <input type="text" id="highestQualification" placeholder="Auto-calculated from Year of Passing" readonly />
+              </div>
+            </div>
+          </div>
+
           <div class="section-navigation mt-4">
-            <button type="button" class="btn btn-prev" onclick="onboardingForm.prevSection(2)">
+            <button type="button" class="btn btn-prev" onclick="onboardingForm.prevSection(3)">
               <i class="fas fa-arrow-left me-2"></i>Previous
             </button>
-            <button type="button" class="btn btn-next" onclick="onboardingForm.nextSection(4)">
+            <button type="button" class="btn btn-next" onclick="onboardingForm.nextSection(5)">
               Next: Work Experience <i class="fas fa-arrow-right ms-2"></i>
             </button>
           </div>
         </div>
 
-        <!-- Section 4: Work Experience -->
-        <div class="form-section" id="section4">
+        <!-- Section 5: Work Experience -->
+        <div class="form-section" id="section5">
           <div class="section-header">
             <i class="fas fa-briefcase me-2"></i>Work Experience
           </div>
@@ -562,17 +624,17 @@
 
 
           <div class="section-navigation mt-4">
-            <button type="button" class="btn btn-prev" onclick="onboardingForm.prevSection(3)">
+            <button type="button" class="btn btn-prev" onclick="onboardingForm.prevSection(4)">
               <i class="fas fa-arrow-left me-2"></i>Previous
             </button>
-            <button type="button" class="btn btn-next" onclick="onboardingForm.nextSection(5)">
+            <button type="button" class="btn btn-next" onclick="onboardingForm.nextSection(6)">
               Next: Other Information <i class="fas fa-arrow-right ms-2"></i>
             </button>
           </div>
         </div>
 
-        <!-- Section 5: Other Information -->
-        <div class="form-section" id="section5">
+        <!-- Section 6: Other Information -->
+        <div class="form-section" id="section6">
           <div class="section-header">
             <i class="fas fa-info-circle me-2"></i>Other Information
           </div>
@@ -587,7 +649,7 @@
           </div>
 
           <div class="section-navigation mt-4">
-            <button type="button" class="btn btn-prev" onclick="onboardingForm.prevSection(4)">
+            <button type="button" class="btn btn-prev" onclick="onboardingForm.prevSection(5)">
               <i class="fas fa-arrow-left me-2"></i>Previous
             </button>
             <button type="submit" class="btn btn-submit">
