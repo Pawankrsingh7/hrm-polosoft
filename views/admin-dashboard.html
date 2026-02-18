@@ -40,13 +40,14 @@
             <tr>
               <th>Employee ID</th>
               <th>Full Name</th>
-              <th>Email</th>
+              <th>Company Email</th>
               <th>Status</th>
+              <th>Review Note</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody id="submissionsBody">
-            <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
+            <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -84,6 +85,22 @@
       return `<span class="status-chip ${cls}">${escapeHtml(normalized)}</span>`;
     }
 
+    function reviewNote(row) {
+      const status = String(row.status || "Pending").toLowerCase();
+      const reviewer = row.reviewer_name ? String(row.reviewer_name).trim() : "";
+      const reason = row.rejection_reason ? String(row.rejection_reason).trim() : "";
+
+      if (status === "verified") {
+        return reviewer ? `Reviewed by: ${escapeHtml(reviewer)}` : "Reviewed";
+      }
+      if (status === "rejected") {
+        const reviewerPart = reviewer ? `Reviewed by: ${escapeHtml(reviewer)}` : "Rejected by reviewer";
+        const reasonPart = reason ? ` | Reason: ${escapeHtml(reason)}` : " | Reason: Details mismatch";
+        return `${reviewerPart}${reasonPart}`;
+      }
+      return "-";
+    }
+
     function setActiveFilterButton(filterValue) {
       document.querySelectorAll("[data-filter]").forEach((btn) => {
         btn.classList.remove("btn-primary");
@@ -100,7 +117,7 @@
       totalRows.textContent = rows.length;
 
       if (!rows.length) {
-        tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No submissions found</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No submissions found</td></tr>`;
         return;
       }
 
@@ -108,8 +125,9 @@
         <tr>
           <td>${escapeHtml(row.employee_id || "N/A")}</td>
           <td>${escapeHtml(row.full_name || "N/A")}</td>
-          <td>${escapeHtml(row.personal_email || "N/A")}</td>
+          <td>${escapeHtml(row.company_email || "N/A")}</td>
           <td>${statusBadge(row.status)}</td>
+          <td>${reviewNote(row)}</td>
           <td>
             <a class="btn btn-outline-secondary btn-sm" href="/admin/submissions/${row.id}?fromStatus=${encodeURIComponent(currentFilter)}">See Details</a>
           </td>
@@ -127,7 +145,7 @@
       }
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${escapeHtml(data.message || "Failed to load submissions")}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${escapeHtml(data.message || "Failed to load submissions")}</td></tr>`;
         return;
       }
       renderRows(data.rows || []);
@@ -137,14 +155,15 @@
     }
 
     function downloadCsv() {
-      const headers = ["Employee ID", "Full Name", "Email", "Status"];
+      const headers = ["Employee ID", "Full Name", "Company Email", "Status", "Review Note"];
       const csvRows = [headers.join(",")];
       currentRows.forEach((row) => {
         const values = [
           row.employee_id || "",
           row.full_name || "",
-          row.personal_email || "",
-          row.status || ""
+          row.company_email || "",
+          row.status || "",
+          statusToReviewNote(row)
         ].map((value) => `"${String(value).replace(/"/g, '""')}"`);
         csvRows.push(values.join(","));
       });
@@ -171,6 +190,15 @@
       await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
       window.location.href = "/admin/login";
     });
+
+    function statusToReviewNote(row) {
+      const status = String(row.status || "Pending").toLowerCase();
+      const reviewer = row.reviewer_name ? String(row.reviewer_name).trim() : "";
+      const reason = row.rejection_reason ? String(row.rejection_reason).trim() : "";
+      if (status === "verified") return reviewer ? `Reviewed by: ${reviewer}` : "Reviewed";
+      if (status === "rejected") return reviewer ? `Reviewed by: ${reviewer} | Reason: ${reason || "Details mismatch"}` : `Reason: ${reason || "Details mismatch"}`;
+      return "-";
+    }
 
     (async function init() {
       await ensureLoggedIn();

@@ -32,7 +32,7 @@
     <div class="sheet">
       <div id="detailsRoot" class="text-muted">Loading...</div>
 
-      <div class="review-panel">
+      <div class="review-panel" id="reviewPanel">
         <div class="row g-3 align-items-end">
           <div class="col-md-5">
             <label for="reviewerName" class="form-label">Reviewer Name</label>
@@ -45,8 +45,8 @@
             </div>
           </div>
           <div class="col-12 d-flex justify-content-end gap-2">
-            <button id="rejectBtn" class="btn btn-danger btn-sm">Rejected</button>
-            <button id="verifyBtn" class="btn btn-success btn-sm">Verified</button>
+            <button id="rejectBtn" class="btn btn-danger btn-sm">Reject</button>
+            <button id="verifyBtn" class="btn btn-success btn-sm">Approve</button>
           </div>
         </div>
       </div>
@@ -55,6 +55,7 @@
 
   <script>
     const detailsRoot = document.getElementById("detailsRoot");
+    const reviewPanel = document.getElementById("reviewPanel");
     const reviewerNameEl = document.getElementById("reviewerName");
     const allCheckedEl = document.getElementById("allChecked");
     const verifyBtn = document.getElementById("verifyBtn");
@@ -142,9 +143,6 @@
         ${block("Other Information", `
           ${item("Details Confirmation", other.detailsConfirmation ? "Yes" : "No")}
           ${item("Submitted At", row.created_at)}
-          ${item("Reviewer Name", row.reviewer_name)}
-          ${item("Reviewed At", row.reviewed_at)}
-          ${item("Rejection Reason", row.rejection_reason)}
         `)}
       `;
 
@@ -178,6 +176,16 @@
         });
       } else {
         html += block("Experience", item("Details", "No previous work experience"));
+      }
+
+      const status = String(row.status || "Pending").toLowerCase();
+      if (status === "verified" || status === "rejected") {
+        html += block("Review Decision", `
+          ${item("Final Status", row.status)}
+          ${item("Reviewer Name", row.reviewer_name)}
+          ${item("Review Note", status === "rejected" ? (row.rejection_reason || "N/A") : "Verified by reviewer")}
+          ${item("Reviewed At", row.reviewed_at)}
+        `);
       }
 
       detailsRoot.innerHTML = html;
@@ -267,6 +275,12 @@
       const data = await response.json();
       currentRow = data.row;
       renderDetails(data.row || {});
+      const status = String(data.row?.status || "Pending").toLowerCase();
+      if (status === "verified" || status === "rejected") {
+        reviewPanel.style.display = "none";
+      } else {
+        reviewPanel.style.display = "block";
+      }
     }
 
     verifyBtn.addEventListener("click", verifySubmission);

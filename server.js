@@ -319,7 +319,13 @@ app.get("/api/admin/submissions", requireAdminApi, async (req, res) => {
     const safeFilter = allowedFilters.has(statusFilter) ? statusFilter : "all";
 
     let query = `
-      SELECT id, employee_id, full_name, personal_email, status, created_at
+      SELECT id, employee_id, full_name,
+      COALESCE(
+        NULLIF(company_email, ''),
+        NULLIF(payload->'address'->>'companyEmail', ''),
+        personal_email
+      ) AS company_email,
+      status, reviewer_name, rejection_reason, created_at
       FROM onboarding_submissions
     `;
     const params = [];
@@ -602,6 +608,12 @@ async function initializeDatabase() {
   await pool.query(`
     ALTER TABLE onboarding_submissions
     ADD COLUMN IF NOT EXISTS rejection_reason TEXT
+  `);
+  await pool.query(`
+    UPDATE onboarding_submissions
+    SET company_email = NULLIF(payload->'address'->>'companyEmail', '')
+    WHERE (company_email IS NULL OR company_email = '')
+      AND NULLIF(payload->'address'->>'companyEmail', '') IS NOT NULL
   `);
   await pool.query(`
     CREATE TABLE IF NOT EXISTS verified_employees (
