@@ -173,6 +173,12 @@ app.get("/admin", requireAdminPage, (_req, res) => {
   return res.sendFile(path.join(__dirname, "views", "admin-dashboard.html"));
 });
 
+app.get("/admin/submissions/:id", requireAdminPage, (_req, res) => {
+  return res.sendFile(
+    path.join(__dirname, "views", "admin-submission-details.html")
+  );
+});
+
 app.post("/api/admin/login", (req, res) => {
   const username = String(req.body?.username || "");
   const password = String(req.body?.password || "");
@@ -309,7 +315,7 @@ app.get("/api/onboarding/submissions", async (_req, res) => {
 app.get("/api/admin/submissions", requireAdminApi, async (req, res) => {
   try {
     const statusFilter = String(req.query.status || "all").toLowerCase();
-    const allowedFilters = new Set(["all", "pending", "verified"]);
+    const allowedFilters = new Set(["all", "pending", "verified", "rejected"]);
     const safeFilter = allowedFilters.has(statusFilter) ? statusFilter : "all";
 
     let query = `
@@ -349,7 +355,7 @@ app.get("/api/admin/submissions/:id", requireAdminApi, async (req, res) => {
 
     const result = await pool.query(
       `
-      SELECT id, employee_id, full_name, personal_email, status, payload, created_at
+      SELECT id, employee_id, full_name, personal_email, status, payload, reviewer_name, reviewed_at, rejection_reason, created_at
       FROM onboarding_submissions
       WHERE id = $1
       `,
@@ -370,53 +376,181 @@ app.get("/api/admin/submissions/:id", requireAdminApi, async (req, res) => {
   }
 });
 
-app.patch(
-  "/api/admin/submissions/:id/status",
-  requireAdminApi,
-  async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const status = String(req.body?.status || "");
+app.post("/api/admin/submissions/:id/verify", requireAdminApi, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const id = Number(req.params.id);
+    const reviewerName = String(req.body?.reviewerName || "").trim();
+    const allChecked = Boolean(req.body?.allChecked);
 
-      if (!Number.isInteger(id) || id <= 0) {
-        return res.status(400).json({ ok: false, message: "Invalid submission id" });
-      }
-
-      if (!["Pending", "Verified"].includes(status)) {
-        return res.status(400).json({
-          ok: false,
-          message: "Invalid status. Allowed values: Pending, Verified",
-        });
-      }
-
-      const result = await pool.query(
-        `
-      UPDATE onboarding_submissions
-      SET status = $1
-      WHERE id = $2
-      RETURNING id, status
-      `,
-        [status, id]
-      );
-
-      if (result.rowCount === 0) {
-        return res.status(404).json({ ok: false, message: "Submission not found" });
-      }
-
-      return res.json({
-        ok: true,
-        message: "Status updated",
-        row: result.rows[0],
-      });
-    } catch (error) {
-      return res.status(500).json({
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ ok: false, message: "Invalid submission id" });
+    }
+    if (!reviewerName) {
+      return res.status(400).json({ ok: false, message: "Reviewer name is required" });
+    }
+    if (!allChecked) {
+      return res.status(400).json({
         ok: false,
-        message: "Failed to update status",
-        error: error.message,
+        message: "Please confirm all informations are checked properly",
       });
     }
+
+    await client.query("BEGIN");
+
+    const submissionResult = await client.query(
+      `
+      UPDATE onboarding_submissions
+      SET status = 'Verified',
+          reviewer_name = $1,
+          reviewed_at = NOW(),
+          rejection_reason = NULL
+      WHERE id = $2
+      RETURNING id, employee_id, full_name, personal_email, payload, reviewer_name, reviewed_at, status
+      `,
+      [reviewerName, id]
+    );
+
+    if (submissionResult.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ ok: false, message: "Submission not found" });
+    }
+
+    const row = submissionResult.rows[0];
+
+    await client.query(
+      `
+      INSERT INTO verified_employees
+      (submission_id, employee_id, full_name, personal_email, payload, reviewer_name, reviewed_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (submission_id)
+      DO UPDATE SET
+        employee_id = EXCLUDED.employee_id,
+        full_name = EXCLUDED.full_name,
+        personal_email = EXCLUDED.personal_email,
+        payload = EXCLUDED.payload,
+        reviewer_name = EXCLUDED.reviewer_name,
+        reviewed_at = EXCLUDED.reviewed_at
+      `,
+      [
+        row.id,
+        row.employee_id,
+        row.full_name,
+        row.personal_email,
+        row.payload,
+        row.reviewer_name,
+        row.reviewed_at,
+      ]
+    );
+
+    await client.query("DELETE FROM rejected_employees WHERE submission_id = $1", [
+      row.id,
+    ]);
+
+    await client.query("COMMIT");
+    return res.json({ ok: true, message: "Employee verified successfully", row });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    return res.status(500).json({
+      ok: false,
+      message: "Failed to verify submission",
+      error: error.message,
+    });
+  } finally {
+    client.release();
   }
-);
+});
+
+app.post("/api/admin/submissions/:id/reject", requireAdminApi, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const id = Number(req.params.id);
+    const reviewerName = String(req.body?.reviewerName || "").trim();
+    const allChecked = Boolean(req.body?.allChecked);
+    const rejectionReason = String(req.body?.rejectionReason || "").trim();
+
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ ok: false, message: "Invalid submission id" });
+    }
+    if (!reviewerName) {
+      return res.status(400).json({ ok: false, message: "Reviewer name is required" });
+    }
+    if (!allChecked) {
+      return res.status(400).json({
+        ok: false,
+        message: "Please confirm all informations are checked properly",
+      });
+    }
+    if (!rejectionReason) {
+      return res.status(400).json({ ok: false, message: "Rejection reason is required" });
+    }
+
+    await client.query("BEGIN");
+
+    const submissionResult = await client.query(
+      `
+      UPDATE onboarding_submissions
+      SET status = 'Rejected',
+          reviewer_name = $1,
+          reviewed_at = NOW(),
+          rejection_reason = $2
+      WHERE id = $3
+      RETURNING id, employee_id, full_name, personal_email, payload, reviewer_name, reviewed_at, rejection_reason, status
+      `,
+      [reviewerName, rejectionReason, id]
+    );
+
+    if (submissionResult.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ ok: false, message: "Submission not found" });
+    }
+
+    const row = submissionResult.rows[0];
+
+    await client.query(
+      `
+      INSERT INTO rejected_employees
+      (submission_id, employee_id, full_name, personal_email, payload, reviewer_name, reviewed_at, rejection_reason)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      ON CONFLICT (submission_id)
+      DO UPDATE SET
+        employee_id = EXCLUDED.employee_id,
+        full_name = EXCLUDED.full_name,
+        personal_email = EXCLUDED.personal_email,
+        payload = EXCLUDED.payload,
+        reviewer_name = EXCLUDED.reviewer_name,
+        reviewed_at = EXCLUDED.reviewed_at,
+        rejection_reason = EXCLUDED.rejection_reason
+      `,
+      [
+        row.id,
+        row.employee_id,
+        row.full_name,
+        row.personal_email,
+        row.payload,
+        row.reviewer_name,
+        row.reviewed_at,
+        row.rejection_reason,
+      ]
+    );
+
+    await client.query("DELETE FROM verified_employees WHERE submission_id = $1", [
+      row.id,
+    ]);
+
+    await client.query("COMMIT");
+    return res.json({ ok: true, message: "Employee rejected successfully", row });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    return res.status(500).json({
+      ok: false,
+      message: "Failed to reject submission",
+      error: error.message,
+    });
+  } finally {
+    client.release();
+  }
+});
 
 app.use(express.static(path.join(__dirname)));
 
@@ -438,6 +572,9 @@ async function initializeDatabase() {
       company_email TEXT,
       aadhar_number TEXT,
       status TEXT NOT NULL DEFAULT 'Pending',
+      reviewer_name TEXT,
+      reviewed_at TIMESTAMPTZ,
+      rejection_reason TEXT,
       has_experience BOOLEAN DEFAULT FALSE,
       files_count INTEGER DEFAULT 0,
       payload JSONB NOT NULL,
@@ -453,6 +590,43 @@ async function initializeDatabase() {
   await pool.query(`
     ALTER TABLE onboarding_submissions
     ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'Pending'
+  `);
+  await pool.query(`
+    ALTER TABLE onboarding_submissions
+    ADD COLUMN IF NOT EXISTS reviewer_name TEXT
+  `);
+  await pool.query(`
+    ALTER TABLE onboarding_submissions
+    ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ
+  `);
+  await pool.query(`
+    ALTER TABLE onboarding_submissions
+    ADD COLUMN IF NOT EXISTS rejection_reason TEXT
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS verified_employees (
+      id BIGSERIAL PRIMARY KEY,
+      submission_id BIGINT UNIQUE REFERENCES onboarding_submissions(id) ON DELETE CASCADE,
+      employee_id TEXT,
+      full_name TEXT,
+      personal_email TEXT,
+      payload JSONB NOT NULL,
+      reviewer_name TEXT NOT NULL,
+      reviewed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS rejected_employees (
+      id BIGSERIAL PRIMARY KEY,
+      submission_id BIGINT UNIQUE REFERENCES onboarding_submissions(id) ON DELETE CASCADE,
+      employee_id TEXT,
+      full_name TEXT,
+      personal_email TEXT,
+      payload JSONB NOT NULL,
+      reviewer_name TEXT NOT NULL,
+      reviewed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      rejection_reason TEXT NOT NULL
+    )
   `);
 }
 

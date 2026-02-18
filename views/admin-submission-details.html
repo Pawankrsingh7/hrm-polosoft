@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submission Details</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body { background: #f3f4f6; font-family: Arial, sans-serif; }
+    .sheet { background: #fff; border-radius: 12px; border: 1px solid #dbe3ef; padding: 16px; }
+    .block { border: 1px solid #dbe3ef; border-radius: 8px; background: #fff; margin-bottom: 12px; }
+    .block-title { background: #eef2f7; border-bottom: 1px solid #dbe3ef; font-weight: 600; padding: 8px 10px; font-size: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 14px; padding: 10px; }
+    .item { font-size: 13px; line-height: 1.3; }
+    .item strong { color: #111827; display: block; margin-bottom: 2px; font-size: 12px; }
+    .status-chip { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .status-pending { background: #fff3cd; color: #7a4e00; }
+    .status-verified { background: #d1e7dd; color: #0f5132; }
+    .status-rejected { background: #f8d7da; color: #842029; }
+    .review-panel { border-top: 1px solid #dbe3ef; margin-top: 16px; padding-top: 16px; }
+    @media (max-width: 992px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 576px) { .grid { grid-template-columns: repeat(1, minmax(0, 1fr)); } }
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Submission Details</h3>
+      <a id="backBtn" class="btn btn-outline-primary btn-sm" href="/admin">Back to Dashboard</a>
+    </div>
+
+    <div class="sheet">
+      <div id="detailsRoot" class="text-muted">Loading...</div>
+
+      <div class="review-panel">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-5">
+            <label for="reviewerName" class="form-label">Reviewer Name</label>
+            <input id="reviewerName" type="text" class="form-control" placeholder="Enter your name" />
+          </div>
+          <div class="col-md-7">
+            <div class="form-check mt-4">
+              <input class="form-check-input" type="checkbox" id="allChecked" />
+              <label class="form-check-label" for="allChecked">All informations are checked properly</label>
+            </div>
+          </div>
+          <div class="col-12 d-flex justify-content-end gap-2">
+            <button id="rejectBtn" class="btn btn-danger btn-sm">Rejected</button>
+            <button id="verifyBtn" class="btn btn-success btn-sm">Verified</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const detailsRoot = document.getElementById("detailsRoot");
+    const reviewerNameEl = document.getElementById("reviewerName");
+    const allCheckedEl = document.getElementById("allChecked");
+    const verifyBtn = document.getElementById("verifyBtn");
+    const rejectBtn = document.getElementById("rejectBtn");
+    const backBtn = document.getElementById("backBtn");
+    let submissionId = null;
+    let currentRow = null;
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function displayValue(value) {
+      if (value === null || value === undefined) return "N/A";
+      const text = String(value).trim();
+      return text ? escapeHtml(text) : "N/A";
+    }
+
+    function statusBadge(status) {
+      const normalized = String(status || "Pending");
+      const lower = normalized.toLowerCase();
+      const cls = lower === "verified" ? "status-verified" : lower === "rejected" ? "status-rejected" : "status-pending";
+      return `<span class="status-chip ${cls}">${escapeHtml(normalized)}</span>`;
+    }
+
+    function item(label, value) {
+      return `<div class="item"><strong>${escapeHtml(label)}</strong><span>${displayValue(value)}</span></div>`;
+    }
+
+    function block(title, itemsHtml) {
+      return `
+        <div class="block">
+          <div class="block-title">${escapeHtml(title)}</div>
+          <div class="grid">${itemsHtml}</div>
+        </div>
+      `;
+    }
+
+    function renderDetails(row) {
+      const payload = row.payload || {};
+      const personal = payload.personal || {};
+      const address = payload.address || {};
+      const identification = payload.identification || {};
+      const education = Array.isArray(payload.education) ? payload.education : [];
+      const experience = Array.isArray(payload.experience) ? payload.experience : [];
+      const other = payload.other || {};
+
+      let html = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">${displayValue(row.full_name || personal.fullName)}</h5>
+          ${statusBadge(row.status)}
+        </div>
+        ${block("Personal", `
+          ${item("Employee ID", row.employee_id || personal.employeeId)}
+          ${item("Salutation", personal.salutation)}
+          ${item("Full Name", personal.fullName)}
+          ${item("Father's Name", personal.fatherName)}
+          ${item("Contact Number", personal.contactNumber)}
+          ${item("Gender", personal.gender)}
+          ${item("Marital Status", personal.maritalStatus)}
+          ${item("Date of Birth", personal.dateOfBirth)}
+          ${item("Blood Group", personal.bloodGroup)}
+        `)}
+        ${block("Address", `
+          ${item("Personal Email", address.personalEmail)}
+          ${item("Company Email", address.companyEmail)}
+          ${item("Current Address", address.currentAddress)}
+          ${item("Permanent Address", address.permanentAddress)}
+          ${item("Country", address.country)}
+          ${item("State", address.state)}
+          ${item("District", address.district)}
+          ${item("City", address.city)}
+          ${item("Pincode", address.pincode)}
+        `)}
+        ${block("Identification", `
+          ${item("Aadhar Number", identification.aadharNumber)}
+          ${item("PAN Number", identification.panNumber)}
+          ${item("Passport Number", identification.passportNumber)}
+          ${item("Passport Valid Upto", identification.passportValidUpto)}
+        `)}
+        ${block("Other Information", `
+          ${item("Details Confirmation", other.detailsConfirmation ? "Yes" : "No")}
+          ${item("Submitted At", row.created_at)}
+          ${item("Reviewer Name", row.reviewer_name)}
+          ${item("Reviewed At", row.reviewed_at)}
+          ${item("Rejection Reason", row.rejection_reason)}
+        `)}
+      `;
+
+      if (education.length) {
+        education.forEach((edu, index) => {
+          html += block(`Education ${index + 1}`, `
+            ${item("Education Level", edu.level)}
+            ${item("Qualification", edu.qualification)}
+            ${item("Specialization", edu.specialization)}
+            ${item("Year of Passing", edu.yearOfPassing)}
+            ${item("Board / University", edu.boardUniversity)}
+            ${item("CGPA / Percentage", edu.cgpa)}
+          `);
+        });
+      } else {
+        html += block("Education", item("Details", "N/A"));
+      }
+
+      if (experience.length) {
+        experience.forEach((exp, index) => {
+          html += block(`Experience ${index + 1}`, `
+            ${item("Organization", exp.organization)}
+            ${item("Designation", exp.designation)}
+            ${item("From Date", exp.fromDate)}
+            ${item("To Date", exp.toDate)}
+            ${item("Company Address", exp.experienceAddress)}
+            ${item("Company Contact", exp.companyContact)}
+            ${item("CTC", exp.ctc)}
+            ${item("Reason For Leaving", exp.reasonForLeaving)}
+          `);
+        });
+      } else {
+        html += block("Experience", item("Details", "No previous work experience"));
+      }
+
+      detailsRoot.innerHTML = html;
+    }
+
+    function validateReviewInputs() {
+      const reviewerName = reviewerNameEl.value.trim();
+      const allChecked = allCheckedEl.checked;
+      if (!reviewerName) {
+        alert("Please enter reviewer name");
+        return null;
+      }
+      if (!allChecked) {
+        alert("Please confirm: All informations are checked properly");
+        return null;
+      }
+      return { reviewerName, allChecked };
+    }
+
+    async function verifySubmission() {
+      const values = validateReviewInputs();
+      if (!values) return;
+
+      const confirmed = window.confirm("Are you sure this employee data is correct?");
+      if (!confirmed) return;
+
+      const response = await fetch(`/api/admin/submissions/${submissionId}/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(values)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        alert(data.message || "Failed to verify submission");
+        return;
+      }
+      alert("Employee marked as Verified");
+      window.location.href = "/admin?status=verified";
+    }
+
+    async function rejectSubmission() {
+      const values = validateReviewInputs();
+      if (!values) return;
+
+      const reason = window.prompt("Enter reason for rejection:");
+      if (reason === null) return;
+      if (!reason.trim()) {
+        alert("Rejection reason is required");
+        return;
+      }
+
+      const response = await fetch(`/api/admin/submissions/${submissionId}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ ...values, rejectionReason: reason.trim() })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        alert(data.message || "Failed to reject submission");
+        return;
+      }
+      alert("Employee marked as Rejected");
+      window.location.href = "/admin?status=rejected";
+    }
+
+    async function ensureLoggedIn() {
+      const response = await fetch("/api/admin/me", { credentials: "include" });
+      if (!response.ok) window.location.href = "/admin/login";
+    }
+
+    async function loadSubmission() {
+      const match = window.location.pathname.match(/\/admin\/submissions\/(\d+)/);
+      submissionId = match ? Number(match[1]) : null;
+      if (!submissionId) {
+        detailsRoot.innerHTML = `<div class="text-danger">Invalid submission id</div>`;
+        return;
+      }
+
+      const response = await fetch(`/api/admin/submissions/${submissionId}`, { credentials: "include" });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        detailsRoot.innerHTML = `<div class="text-danger">${escapeHtml(data.message || "Failed to load submission")}</div>`;
+        return;
+      }
+      const data = await response.json();
+      currentRow = data.row;
+      renderDetails(data.row || {});
+    }
+
+    verifyBtn.addEventListener("click", verifySubmission);
+    rejectBtn.addEventListener("click", rejectSubmission);
+
+    (async function init() {
+      await ensureLoggedIn();
+      const statusQuery = new URLSearchParams(window.location.search).get("fromStatus");
+      backBtn.href = statusQuery ? `/admin?status=${encodeURIComponent(statusQuery)}` : "/admin";
+      await loadSubmission();
+    })();
+  </script>
+</body>
+</html>

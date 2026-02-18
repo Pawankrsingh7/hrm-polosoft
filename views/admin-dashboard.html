@@ -6,31 +6,12 @@
   <title>Admin Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
-    body {
-      background: #f3f4f6;
-      font-family: Arial, sans-serif;
-    }
-    .table-wrap {
-      background: #fff;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-    }
-    .status-chip {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .status-pending {
-      background: #fff3cd;
-      color: #7a4e00;
-    }
-    .status-verified {
-      background: #d1e7dd;
-      color: #0f5132;
-    }
+    body { background: #f3f4f6; font-family: Arial, sans-serif; }
+    .table-wrap { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 8px 20px rgba(0,0,0,.06); }
+    .status-chip { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .status-pending { background: #fff3cd; color: #7a4e00; }
+    .status-verified { background: #d1e7dd; color: #0f5132; }
+    .status-rejected { background: #f8d7da; color: #842029; }
   </style>
 </head>
 <body>
@@ -40,9 +21,10 @@
         <h2 class="mb-1">Admin Dashboard</h2>
         <p class="text-muted mb-0">Employee submissions</p>
       </div>
-      <div class="d-flex gap-2">
+      <div class="d-flex flex-wrap gap-2">
         <button class="btn btn-primary btn-sm" data-filter="all">Employee Submissions</button>
         <button class="btn btn-outline-primary btn-sm" data-filter="verified">Verified Employees</button>
+        <button class="btn btn-outline-primary btn-sm" data-filter="rejected">Rejected Employees</button>
         <button class="btn btn-outline-primary btn-sm" data-filter="pending">Pending Employees</button>
         <button id="refreshBtn" class="btn btn-outline-secondary btn-sm">Refresh</button>
         <button id="downloadBtn" class="btn btn-success btn-sm">Download Excel</button>
@@ -71,34 +53,20 @@
     </div>
   </div>
 
-  <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Submission Details</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <pre id="detailsJson" class="small mb-0"></pre>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     let currentFilter = "all";
     let currentRows = [];
     const tableBody = document.getElementById("submissionsBody");
     const totalRows = document.getElementById("totalRows");
-    const detailsModal = new bootstrap.Modal(document.getElementById("detailsModal"));
-    const detailsJson = document.getElementById("detailsJson");
+
+    function getFilterFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("status");
+    }
 
     async function ensureLoggedIn() {
       const response = await fetch("/api/admin/me", { credentials: "include" });
-      if (!response.ok) {
-        window.location.href = "/admin/login";
-      }
+      if (!response.ok) window.location.href = "/admin/login";
     }
 
     function escapeHtml(value) {
@@ -111,8 +79,20 @@
 
     function statusBadge(status) {
       const normalized = String(status || "Pending");
-      const cls = normalized === "Verified" ? "status-verified" : "status-pending";
+      const lower = normalized.toLowerCase();
+      const cls = lower === "verified" ? "status-verified" : lower === "rejected" ? "status-rejected" : "status-pending";
       return `<span class="status-chip ${cls}">${escapeHtml(normalized)}</span>`;
+    }
+
+    function setActiveFilterButton(filterValue) {
+      document.querySelectorAll("[data-filter]").forEach((btn) => {
+        btn.classList.remove("btn-primary");
+        btn.classList.add("btn-outline-primary");
+        if (btn.dataset.filter === filterValue) {
+          btn.classList.remove("btn-outline-primary");
+          btn.classList.add("btn-primary");
+        }
+      });
     }
 
     function renderRows(rows) {
@@ -130,11 +110,8 @@
           <td>${escapeHtml(row.full_name || "N/A")}</td>
           <td>${escapeHtml(row.personal_email || "N/A")}</td>
           <td>${statusBadge(row.status)}</td>
-          <td class="d-flex gap-2">
-            <button class="btn btn-outline-secondary btn-sm" onclick="viewDetails(${row.id})">See Details</button>
-            <button class="btn btn-outline-primary btn-sm" onclick="toggleStatus(${row.id}, '${row.status === "Verified" ? "Pending" : "Verified"}')">
-              ${row.status === "Verified" ? "Mark Pending" : "Mark Verified"}
-            </button>
+          <td>
+            <a class="btn btn-outline-secondary btn-sm" href="/admin/submissions/${row.id}?fromStatus=${encodeURIComponent(currentFilter)}">See Details</a>
           </td>
         </tr>
       `).join("");
@@ -154,31 +131,9 @@
         return;
       }
       renderRows(data.rows || []);
-    }
-
-    async function toggleStatus(id, nextStatus) {
-      const response = await fetch(`/api/admin/submissions/${id}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ status: nextStatus })
-      });
-      if (!response.ok) {
-        alert("Failed to update status");
-        return;
-      }
-      await loadSubmissions();
-    }
-
-    async function viewDetails(id) {
-      const response = await fetch(`/api/admin/submissions/${id}`, { credentials: "include" });
-      if (!response.ok) {
-        alert("Failed to fetch details");
-        return;
-      }
-      const data = await response.json();
-      detailsJson.textContent = JSON.stringify(data.row?.payload || {}, null, 2);
-      detailsModal.show();
+      const url = new URL(window.location.href);
+      url.searchParams.set("status", currentFilter);
+      window.history.replaceState({}, "", url.toString());
     }
 
     function downloadCsv() {
@@ -193,7 +148,6 @@
         ].map((value) => `"${String(value).replace(/"/g, '""')}"`);
         csvRows.push(values.join(","));
       });
-
       const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -205,20 +159,14 @@
 
     document.querySelectorAll("[data-filter]").forEach((button) => {
       button.addEventListener("click", async () => {
-        document.querySelectorAll("[data-filter]").forEach((btn) => {
-          btn.classList.remove("btn-primary");
-          btn.classList.add("btn-outline-primary");
-        });
-        button.classList.remove("btn-outline-primary");
-        button.classList.add("btn-primary");
         currentFilter = button.dataset.filter;
+        setActiveFilterButton(currentFilter);
         await loadSubmissions();
       });
     });
 
     document.getElementById("refreshBtn").addEventListener("click", loadSubmissions);
     document.getElementById("downloadBtn").addEventListener("click", downloadCsv);
-
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
       window.location.href = "/admin/login";
@@ -226,6 +174,11 @@
 
     (async function init() {
       await ensureLoggedIn();
+      const fromUrl = (getFilterFromUrl() || "").toLowerCase();
+      if (["all", "pending", "verified", "rejected"].includes(fromUrl)) {
+        currentFilter = fromUrl;
+      }
+      setActiveFilterButton(currentFilter);
       await loadSubmissions();
     })();
   </script>
