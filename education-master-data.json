@@ -1,0 +1,734 @@
+﻿{
+    "rows":  [
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "Computer Science and Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "Mechanical Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "Civil Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "IT"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "Electrical Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "Electronics and Communication Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "Software Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "Electrical and Electronics Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "Artificial Intelligence \u0026 Machine Learning"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "Data Science / Data Analytics"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "Cyber Security \u0026 Forensics"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "Cloud Computing, DevOps \u0026 Automation"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "Internet of Things"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "Mechanical/Automobile Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Tech",
+                     "specialization":  "Aeronautical Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "Computer Science and Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "Mechanical Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "Civil Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "IT"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "Electrical Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "Electronics and Communication Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "Software Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "Electrical and Electronics Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "Artificial Intelligence \u0026 Machine Learning"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "Data Science / Data Analytics"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "Cyber Security \u0026 Forensics"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "Cloud Computing, DevOps \u0026 Automation"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "Internet of Things"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "Mechanical/Automobile Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BE",
+                     "specialization":  "Aeronautical Engineering"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.A",
+                     "specialization":  "Computer Science"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.A",
+                     "specialization":  "Journalism \u0026 Mass Communication"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.A",
+                     "specialization":  "Social Sciences"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.A",
+                     "specialization":  "Media \u0026 Communication"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.A",
+                     "specialization":  "Humanities \u0026 Fine Arts"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.A",
+                     "specialization":  "Psychology"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.A",
+                     "specialization":  "Political Science"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.A",
+                     "specialization":  "Economics"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.A",
+                     "specialization":  "English"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Com",
+                     "specialization":  "Accounting \u0026 Taxation"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Com",
+                     "specialization":  "Finance/Financial Markets"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Com",
+                     "specialization":  "Banking \u0026 Insurance"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Com",
+                     "specialization":  "Cost \u0026 Management Accounting"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Sc.",
+                     "specialization":  "Mathematics"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Sc.",
+                     "specialization":  "Chemistry"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Sc.",
+                     "specialization":  "Physics"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Sc.",
+                     "specialization":  "Information Technology"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Sc.",
+                     "specialization":  "IT Infrastructre Management"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Sc.",
+                     "specialization":  "Biotechnology"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B.Sc.",
+                     "specialization":  "Graphics \u0026 Web Designing"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BBA",
+                     "specialization":  "Marketing"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BBA",
+                     "specialization":  "Finance"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BBA",
+                     "specialization":  "Human Reousource Management"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BBA",
+                     "specialization":  "IT \u0026 Systems Management"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BBM",
+                     "specialization":  "Finance"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BBM",
+                     "specialization":  "Marketing"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BBM",
+                     "specialization":  "Human Reousource Management"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BBM",
+                     "specialization":  "International Business"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BBM",
+                     "specialization":  "Operations Management"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BCA",
+                     "specialization":  "Cloud Computing"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BCA",
+                     "specialization":  "Data Science \u0026 Big Data"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BCA",
+                     "specialization":  "Cyber Security \u0026 Forensics"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BCA",
+                     "specialization":  "Artificial Intelligence \u0026 Machine Learning"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BCA",
+                     "specialization":  "Mobile Application Development"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BCA",
+                     "specialization":  "Full Stack Development"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BCA",
+                     "specialization":  "Internet of Things"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "BCA",
+                     "specialization":  "UI/UX Design \u0026 Web Technologies"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B. Ed",
+                     "specialization":  "English"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B. Ed",
+                     "specialization":  "Hindi"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B. Ed",
+                     "specialization":  "Foreign Language"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B. Ed",
+                     "specialization":  "Science"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B. Ed",
+                     "specialization":  "Social Science"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B. Ed",
+                     "specialization":  "Physical Education"
+                 },
+                 {
+                     "degreeType":  "Undergraduate (UG)",
+                     "degreeName":  "B. Ed",
+                     "specialization":  "Commerce"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Com",
+                     "specialization":  "Finance"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Com",
+                     "specialization":  "Accounting"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Com",
+                     "specialization":  "Taxation"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Com",
+                     "specialization":  "Banking and Insurance"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Sc.",
+                     "specialization":  "Chemistry"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Sc.",
+                     "specialization":  "Mathematics"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Sc.",
+                     "specialization":  "Physics"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Sc.",
+                     "specialization":  "Computer Science"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Sc.",
+                     "specialization":  "Information Technology"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "PGDCA",
+                     "specialization":  "Software Engineering \u0026 Development"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "PGDCA",
+                     "specialization":  "Web Technology \u0026 Development"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "PGDCA",
+                     "specialization":  "Database Management SystemsÂ"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "PGDCA",
+                     "specialization":  "Data Science \u0026 Analytics"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "PGDCA",
+                     "specialization":  "Cyber Security \u0026 Networking"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "PGDCA",
+                     "specialization":  "Computer Applications \u0026 Programming"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Tech.",
+                     "specialization":  "Civil"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Tech.",
+                     "specialization":  "Electronics and Communication EngineeringÂ"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Tech.",
+                     "specialization":  "Computer Science Engineering"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Tech.",
+                     "specialization":  "Electrical"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Tech.",
+                     "specialization":  "Electrical and Electronics Engineering"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "M.Tech.",
+                     "specialization":  "Mechanical"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "ME",
+                     "specialization":  "Civil"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "ME",
+                     "specialization":  "Electronics and Communication EngineeringÂ"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "ME",
+                     "specialization":  "Computer Science Engineering"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "ME",
+                     "specialization":  "Electrical"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "ME",
+                     "specialization":  "Electrical and Electronics Engineering"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "ME",
+                     "specialization":  "Mechanical"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "PGD",
+                     "specialization":  "Marketing Management"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "PGD",
+                     "specialization":  "Finance Management"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "PGD",
+                     "specialization":  "Human Resource ManagementÂ"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "PGD",
+                     "specialization":  "Operations Management"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "PGD",
+                     "specialization":  "International Business"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "PGD",
+                     "specialization":  "Business Analytics \u0026 AI"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "PGD",
+                     "specialization":  "Information Technology (IT) Management"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "PGD",
+                     "specialization":  "Digital Marketing"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "MBA",
+                     "specialization":  "Marketing"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "MBA",
+                     "specialization":  "Finance"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "MBA",
+                     "specialization":  "Human Reousource Management"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "MBA",
+                     "specialization":  "IT \u0026 Systems Management"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "MCA",
+                     "specialization":  "Artificial Intelligence \u0026 Machine LearningÂ"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "MCA",
+                     "specialization":  "Data Science \u0026 Data Analytics"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "MCA",
+                     "specialization":  "Cybersecurity \u0026 Ethical Hacking"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "MCA",
+                     "specialization":  "Cloud Computing \u0026 DevOps"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "MCA",
+                     "specialization":  "Full Stack Development"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "MCA",
+                     "specialization":  "Internet of Things"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "MCA",
+                     "specialization":  "Blockchain Technology"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "MCA",
+                     "specialization":  "Mobile Application Development"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "MCA",
+                     "specialization":  "Software Engineering/Development"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "MCA",
+                     "specialization":  "System Management"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "LLM",
+                     "specialization":  "LLM"
+                 },
+                 {
+                     "degreeType":  "Postgraduate (PG)",
+                     "degreeName":  "LLB",
+                     "specialization":  "LLB"
+                 },
+                 {
+                     "degreeType":  "Doctorate (PhD)",
+                     "degreeName":  "Doctorate (PhD)",
+                     "specialization":  "Doctorate (PhD)"
+                 },
+                 {
+                     "degreeType":  "Diploma",
+                     "degreeName":  "Diploma",
+                     "specialization":  "Civil"
+                 },
+                 {
+                     "degreeType":  "Diploma",
+                     "degreeName":  "Diploma",
+                     "specialization":  "Mechanical"
+                 },
+                 {
+                     "degreeType":  "Diploma",
+                     "degreeName":  "Diploma",
+                     "specialization":  "Information Technology"
+                 },
+                 {
+                     "degreeType":  "Diploma",
+                     "degreeName":  "Diploma",
+                     "specialization":  "Computer Science"
+                 },
+                 {
+                     "degreeType":  "Diploma",
+                     "degreeName":  "Diploma",
+                     "specialization":  "AI"
+                 },
+                 {
+                     "degreeType":  "Diploma",
+                     "degreeName":  "Diploma",
+                     "specialization":  "Cyber Security"
+                 },
+                 {
+                     "degreeType":  "Diploma",
+                     "degreeName":  "Diploma",
+                     "specialization":  "Cloud Computing"
+                 },
+                 {
+                     "degreeType":  "Diploma",
+                     "degreeName":  "Diploma",
+                     "specialization":  "Electronics"
+                 },
+                 {
+                     "degreeType":  "Diploma",
+                     "degreeName":  "Diploma",
+                     "specialization":  "Electronics \u0026 Communication Engineering"
+                 },
+                 {
+                     "degreeType":  "Diploma",
+                     "degreeName":  "Diploma",
+                     "specialization":  "Electrical and Electronics Engineering"
+                 },
+                 {
+                     "degreeType":  "Diploma",
+                     "degreeName":  "Diploma",
+                     "specialization":  "Hardware and Networking"
+                 },
+                 {
+                     "degreeType":  "Diploma",
+                     "degreeName":  "Diploma",
+                     "specialization":  "Computer Applications/Maintenance"
+                 },
+                 {
+                     "degreeType":  "Matriculation",
+                     "degreeName":  "Matriculation",
+                     "specialization":  "Matriculation"
+                 },
+                 {
+                     "degreeType":  "High School",
+                     "degreeName":  "Senior Secondary",
+                     "specialization":  "Medical (PCB)"
+                 },
+                 {
+                     "degreeType":  "High School",
+                     "degreeName":  "Senior Secondary",
+                     "specialization":  "Non-Medical (PCM)"
+                 },
+                 {
+                     "degreeType":  "High School",
+                     "degreeName":  "Senior Secondary",
+                     "specialization":  "PCMB"
+                 },
+                 {
+                     "degreeType":  "High School",
+                     "degreeName":  "Senior Secondary",
+                     "specialization":  "Commerce"
+                 },
+                 {
+                     "degreeType":  "High School",
+                     "degreeName":  "Senior Secondary",
+                     "specialization":  "Accountancy"
+                 },
+                 {
+                     "degreeType":  "High School",
+                     "degreeName":  "Senior Secondary",
+                     "specialization":  "Economics"
+                 },
+                 {
+                     "degreeType":  "High School",
+                     "degreeName":  "Senior Secondary",
+                     "specialization":  "Arts"
+                 }
+             ]
+}
