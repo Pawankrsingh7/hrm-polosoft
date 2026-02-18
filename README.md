@@ -36,11 +36,25 @@ npm start
   ```
 - `GET /api/onboarding/submissions`
 
+## Admin
+
+- Login page: `/admin/login`
+- Dashboard: `/admin`
+- Default credentials:
+  - Username: `admin`
+  - Password: `admin@108`
+
+Admin APIs (authenticated by secure cookie after login):
+- `POST /api/admin/login`
+- `POST /api/admin/logout`
+- `GET /api/admin/submissions?status=all|pending|verified`
+- `PATCH /api/admin/submissions/:id/status` with `{ "status": "Pending" | "Verified" }`
+
 ## Database
 
 Table created automatically on startup:
 - `onboarding_submissions`
-  - `id`, `full_name`, `contact_number`, `personal_email`, `company_email`, `aadhar_number`, `has_experience`, `files_count`, `payload` (`jsonb`), `created_at`
+  - `id`, `employee_id`, `full_name`, `contact_number`, `personal_email`, `company_email`, `aadhar_number`, `status`, `has_experience`, `files_count`, `payload` (`jsonb`), `created_at`
 
 ## Render deployment
 
@@ -56,4 +70,3 @@ Table created automatically on startup:
 - `NODE_ENV` = `production`
 
 This project serves both frontend and API from the same Express service.
-

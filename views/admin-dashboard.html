@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background: #f3f4f6;
+      font-family: Arial, sans-serif;
+    }
+    .table-wrap {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    }
+    .status-chip {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-pending {
+      background: #fff3cd;
+      color: #7a4e00;
+    }
+    .status-verified {
+      background: #d1e7dd;
+      color: #0f5132;
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <div>
+        <h2 class="mb-1">Admin Dashboard</h2>
+        <p class="text-muted mb-0">Employee submissions</p>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary btn-sm" data-filter="all">Employee Submissions</button>
+        <button class="btn btn-outline-primary btn-sm" data-filter="verified">Verified Employees</button>
+        <button class="btn btn-outline-primary btn-sm" data-filter="pending">Pending Employees</button>
+        <button id="refreshBtn" class="btn btn-outline-secondary btn-sm">Refresh</button>
+        <button id="downloadBtn" class="btn btn-success btn-sm">Download Excel</button>
+        <button id="logoutBtn" class="btn btn-outline-danger btn-sm">Logout</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="mb-2 fw-semibold">Total rows: <span id="totalRows">0</span></div>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Employee ID</th>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="submissionsBody">
+            <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Submission Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <pre id="detailsJson" class="small mb-0"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let currentFilter = "all";
+    let currentRows = [];
+    const tableBody = document.getElementById("submissionsBody");
+    const totalRows = document.getElementById("totalRows");
+    const detailsModal = new bootstrap.Modal(document.getElementById("detailsModal"));
+    const detailsJson = document.getElementById("detailsJson");
+
+    async function ensureLoggedIn() {
+      const response = await fetch("/api/admin/me", { credentials: "include" });
+      if (!response.ok) {
+        window.location.href = "/admin/login";
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function statusBadge(status) {
+      const normalized = String(status || "Pending");
+      const cls = normalized === "Verified" ? "status-verified" : "status-pending";
+      return `<span class="status-chip ${cls}">${escapeHtml(normalized)}</span>`;
+    }
+
+    function renderRows(rows) {
+      currentRows = rows;
+      totalRows.textContent = rows.length;
+
+      if (!rows.length) {
+        tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No submissions found</td></tr>`;
+        return;
+      }
+
+      tableBody.innerHTML = rows.map((row) => `
+        <tr>
+          <td>${escapeHtml(row.employee_id || "N/A")}</td>
+          <td>${escapeHtml(row.full_name || "N/A")}</td>
+          <td>${escapeHtml(row.personal_email || "N/A")}</td>
+          <td>${statusBadge(row.status)}</td>
+          <td class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" onclick="viewDetails(${row.id})">See Details</button>
+            <button class="btn btn-outline-primary btn-sm" onclick="toggleStatus(${row.id}, '${row.status === "Verified" ? "Pending" : "Verified"}')">
+              ${row.status === "Verified" ? "Mark Pending" : "Mark Verified"}
+            </button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    async function loadSubmissions() {
+      tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>`;
+      const query = currentFilter === "all" ? "" : `?status=${encodeURIComponent(currentFilter)}`;
+      const response = await fetch(`/api/admin/submissions${query}`, { credentials: "include" });
+      if (response.status === 401) {
+        window.location.href = "/admin/login";
+        return;
+      }
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${escapeHtml(data.message || "Failed to load submissions")}</td></tr>`;
+        return;
+      }
+      renderRows(data.rows || []);
+    }
+
+    async function toggleStatus(id, nextStatus) {
+      const response = await fetch(`/api/admin/submissions/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status: nextStatus })
+      });
+      if (!response.ok) {
+        alert("Failed to update status");
+        return;
+      }
+      await loadSubmissions();
+    }
+
+    async function viewDetails(id) {
+      const response = await fetch(`/api/admin/submissions/${id}`, { credentials: "include" });
+      if (!response.ok) {
+        alert("Failed to fetch details");
+        return;
+      }
+      const data = await response.json();
+      detailsJson.textContent = JSON.stringify(data.row?.payload || {}, null, 2);
+      detailsModal.show();
+    }
+
+    function downloadCsv() {
+      const headers = ["Employee ID", "Full Name", "Email", "Status"];
+      const csvRows = [headers.join(",")];
+      currentRows.forEach((row) => {
+        const values = [
+          row.employee_id || "",
+          row.full_name || "",
+          row.personal_email || "",
+          row.status || ""
+        ].map((value) => `"${String(value).replace(/"/g, '""')}"`);
+        csvRows.push(values.join(","));
+      });
+
+      const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "employee_submissions.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.querySelectorAll("[data-filter]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        document.querySelectorAll("[data-filter]").forEach((btn) => {
+          btn.classList.remove("btn-primary");
+          btn.classList.add("btn-outline-primary");
+        });
+        button.classList.remove("btn-outline-primary");
+        button.classList.add("btn-primary");
+        currentFilter = button.dataset.filter;
+        await loadSubmissions();
+      });
+    });
+
+    document.getElementById("refreshBtn").addEventListener("click", loadSubmissions);
+    document.getElementById("downloadBtn").addEventListener("click", downloadCsv);
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
+      window.location.href = "/admin/login";
+    });
+
+    (async function init() {
+      await ensureLoggedIn();
+      await loadSubmissions();
+    })();
+  </script>
+</body>
+</html>

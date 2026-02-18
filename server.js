@@ -1,4 +1,5 @@
 const path = require("path");
+const crypto = require("crypto");
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
@@ -7,6 +8,12 @@ require("dotenv").config();
 const app = express();
 const PORT = Number(process.env.PORT) || 10000;
 const isProduction = process.env.NODE_ENV === "production";
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin@108";
+const ADMIN_SESSION_SECRET =
+  process.env.ADMIN_SESSION_SECRET || "replace-this-secret-in-production";
+const SESSION_COOKIE_NAME = "admin_session";
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
 const hasDiscreteConfig = Boolean(
@@ -45,6 +52,100 @@ app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+function parseCookies(req) {
+  const cookieHeader = req.headers.cookie || "";
+  return cookieHeader.split(";").reduce((acc, part) => {
+    const [rawKey, ...rawVal] = part.trim().split("=");
+    if (!rawKey) return acc;
+    acc[rawKey] = decodeURIComponent(rawVal.join("="));
+    return acc;
+  }, {});
+}
+
+function encodeBase64Url(text) {
+  return Buffer.from(text, "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+function decodeBase64Url(text) {
+  const normalized = text.replace(/-/g, "+").replace(/_/g, "/");
+  const padLength = (4 - (normalized.length % 4)) % 4;
+  return Buffer.from(normalized + "=".repeat(padLength), "base64").toString(
+    "utf8"
+  );
+}
+
+function signSegment(segment) {
+  return crypto
+    .createHmac("sha256", ADMIN_SESSION_SECRET)
+    .update(segment)
+    .digest("hex");
+}
+
+function createAdminSessionToken(username) {
+  const payload = JSON.stringify({
+    username,
+    exp: Date.now() + SESSION_TTL_MS,
+  });
+  const payloadSegment = encodeBase64Url(payload);
+  const signature = signSegment(payloadSegment);
+  return `${payloadSegment}.${signature}`;
+}
+
+function verifyAdminSessionToken(token) {
+  if (!token || typeof token !== "string" || !token.includes(".")) return null;
+
+  const [payloadSegment, signature] = token.split(".");
+  if (!payloadSegment || !signature) return null;
+
+  const expectedSignature = signSegment(payloadSegment);
+  const validSignature =
+    expectedSignature.length === signature.length &&
+    crypto.timingSafeEqual(
+      Buffer.from(expectedSignature),
+      Buffer.from(signature)
+    );
+
+  if (!validSignature) return null;
+
+  try {
+    const payload = JSON.parse(decodeBase64Url(payloadSegment));
+    if (!payload || payload.exp < Date.now()) return null;
+    return payload;
+  } catch (_err) {
+    return null;
+  }
+}
+
+function requireAdminApi(req, res, next) {
+  const cookies = parseCookies(req);
+  const token = cookies[SESSION_COOKIE_NAME];
+  const session = verifyAdminSessionToken(token);
+
+  if (!session) {
+    return res.status(401).json({ ok: false, message: "Unauthorized" });
+  }
+
+  req.adminSession = session;
+  return next();
+}
+
+function requireAdminPage(req, res, next) {
+  const cookies = parseCookies(req);
+  const token = cookies[SESSION_COOKIE_NAME];
+  const session = verifyAdminSessionToken(token);
+
+  if (!session) {
+    return res.redirect("/admin/login");
+  }
+
+  req.adminSession = session;
+  return next();
+}
+
 app.get("/api/health", async (_req, res) => {
   try {
     await pool.query("SELECT 1");
@@ -56,6 +157,63 @@ app.get("/api/health", async (_req, res) => {
       error: error.message,
     });
   }
+});
+
+app.get("/admin/login", (req, res) => {
+  const cookies = parseCookies(req);
+  const token = cookies[SESSION_COOKIE_NAME];
+  const session = verifyAdminSessionToken(token);
+  if (session) {
+    return res.redirect("/admin");
+  }
+  return res.sendFile(path.join(__dirname, "views", "admin-login.html"));
+});
+
+app.get("/admin", requireAdminPage, (_req, res) => {
+  return res.sendFile(path.join(__dirname, "views", "admin-dashboard.html"));
+});
+
+app.post("/api/admin/login", (req, res) => {
+  const username = String(req.body?.username || "");
+  const password = String(req.body?.password || "");
+
+  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    return res.status(401).json({
+      ok: false,
+      message: "Invalid username or password",
+    });
+  }
+
+  const token = createAdminSessionToken(username);
+  res.cookie(SESSION_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESSION_TTL_MS,
+  });
+
+  return res.json({
+    ok: true,
+    message: "Login successful",
+  });
+});
+
+app.post("/api/admin/logout", (_req, res) => {
+  res.clearCookie(SESSION_COOKIE_NAME, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: "lax",
+    path: "/",
+  });
+  return res.json({ ok: true, message: "Logged out" });
+});
+
+app.get("/api/admin/me", requireAdminApi, (req, res) => {
+  return res.json({
+    ok: true,
+    admin: { username: req.adminSession.username },
+  });
 });
 
 app.post("/api/onboarding/submit", async (req, res) => {
@@ -71,6 +229,7 @@ app.post("/api/onboarding/submit", async (req, res) => {
     }
 
     const fullName = payload?.personal?.fullName || null;
+    const employeeId = payload?.personal?.employeeId || null;
     const contactNumber = payload?.personal?.contactNumber || null;
     const personalEmail = payload?.address?.personalEmail || null;
     const companyEmail = payload?.address?.companyEmail || null;
@@ -85,24 +244,28 @@ app.post("/api/onboarding/submit", async (req, res) => {
       INSERT INTO onboarding_submissions
       (
         full_name,
+        employee_id,
         contact_number,
         personal_email,
         company_email,
         aadhar_number,
+        status,
         has_experience,
         files_count,
         payload
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING id, created_at;
     `;
 
     const values = [
       fullName,
+      employeeId,
       contactNumber,
       personalEmail,
       companyEmail,
       aadharNumber,
+      "Pending",
       hasExperience,
       filesCount,
       payload,
@@ -128,7 +291,7 @@ app.post("/api/onboarding/submit", async (req, res) => {
 app.get("/api/onboarding/submissions", async (_req, res) => {
   try {
     const result = await pool.query(`
-      SELECT id, full_name, contact_number, personal_email, company_email, created_at
+      SELECT id, employee_id, full_name, contact_number, personal_email, company_email, status, created_at
       FROM onboarding_submissions
       ORDER BY created_at DESC
       LIMIT 100
@@ -142,6 +305,118 @@ app.get("/api/onboarding/submissions", async (_req, res) => {
     });
   }
 });
+
+app.get("/api/admin/submissions", requireAdminApi, async (req, res) => {
+  try {
+    const statusFilter = String(req.query.status || "all").toLowerCase();
+    const allowedFilters = new Set(["all", "pending", "verified"]);
+    const safeFilter = allowedFilters.has(statusFilter) ? statusFilter : "all";
+
+    let query = `
+      SELECT id, employee_id, full_name, personal_email, status, created_at
+      FROM onboarding_submissions
+    `;
+    const params = [];
+
+    if (safeFilter !== "all") {
+      query += " WHERE LOWER(status) = $1";
+      params.push(safeFilter);
+    }
+
+    query += " ORDER BY created_at DESC LIMIT 500";
+    const result = await pool.query(query, params);
+
+    return res.json({
+      ok: true,
+      count: result.rowCount,
+      rows: result.rows,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      message: "Failed to fetch admin submissions",
+      error: error.message,
+    });
+  }
+});
+
+app.get("/api/admin/submissions/:id", requireAdminApi, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ ok: false, message: "Invalid submission id" });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT id, employee_id, full_name, personal_email, status, payload, created_at
+      FROM onboarding_submissions
+      WHERE id = $1
+      `,
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ ok: false, message: "Submission not found" });
+    }
+
+    return res.json({ ok: true, row: result.rows[0] });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      message: "Failed to fetch submission details",
+      error: error.message,
+    });
+  }
+});
+
+app.patch(
+  "/api/admin/submissions/:id/status",
+  requireAdminApi,
+  async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const status = String(req.body?.status || "");
+
+      if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({ ok: false, message: "Invalid submission id" });
+      }
+
+      if (!["Pending", "Verified"].includes(status)) {
+        return res.status(400).json({
+          ok: false,
+          message: "Invalid status. Allowed values: Pending, Verified",
+        });
+      }
+
+      const result = await pool.query(
+        `
+      UPDATE onboarding_submissions
+      SET status = $1
+      WHERE id = $2
+      RETURNING id, status
+      `,
+        [status, id]
+      );
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({ ok: false, message: "Submission not found" });
+      }
+
+      return res.json({
+        ok: true,
+        message: "Status updated",
+        row: result.rows[0],
+      });
+    } catch (error) {
+      return res.status(500).json({
+        ok: false,
+        message: "Failed to update status",
+        error: error.message,
+      });
+    }
+  }
+);
 
 app.use(express.static(path.join(__dirname)));
 
@@ -157,10 +432,12 @@ async function initializeDatabase() {
     CREATE TABLE IF NOT EXISTS onboarding_submissions (
       id BIGSERIAL PRIMARY KEY,
       full_name TEXT,
+      employee_id TEXT,
       contact_number TEXT,
       personal_email TEXT,
       company_email TEXT,
       aadhar_number TEXT,
+      status TEXT NOT NULL DEFAULT 'Pending',
       has_experience BOOLEAN DEFAULT FALSE,
       files_count INTEGER DEFAULT 0,
       payload JSONB NOT NULL,
@@ -169,6 +446,14 @@ async function initializeDatabase() {
   `;
 
   await pool.query(createTableQuery);
+  await pool.query(`
+    ALTER TABLE onboarding_submissions
+    ADD COLUMN IF NOT EXISTS employee_id TEXT
+  `);
+  await pool.query(`
+    ALTER TABLE onboarding_submissions
+    ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'Pending'
+  `);
 }
 
 async function startServer() {
