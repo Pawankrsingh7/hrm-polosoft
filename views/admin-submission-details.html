@@ -18,6 +18,20 @@
     .status-verified { background: #d1e7dd; color: #0f5132; }
     .status-rejected { background: #f8d7da; color: #842029; }
     .review-panel { border-top: 1px solid #dbe3ef; margin-top: 16px; padding-top: 16px; }
+    .print-btn {
+      border: 1px solid #dbe3ef;
+      background: #fff;
+      color: #334155;
+      border-radius: 8px;
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .print-btn:hover { background: #f8fafc; }
+    .print-btn:disabled { cursor: not-allowed; opacity: .6; }
     @media (max-width: 992px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 576px) { .grid { grid-template-columns: repeat(1, minmax(0, 1fr)); } }
   </style>
@@ -29,7 +43,7 @@
       <a id="backBtn" class="btn btn-outline-primary btn-sm" href="/admin">Back to Dashboard</a>
     </div>
 
-    <div class="sheet">
+    <div class="sheet" id="pdfContent">
       <div id="detailsRoot" class="text-muted">Loading...</div>
 
       <div class="review-panel" id="reviewPanel">
@@ -53,6 +67,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <script>
     const detailsRoot = document.getElementById("detailsRoot");
     const reviewPanel = document.getElementById("reviewPanel");
@@ -61,6 +76,7 @@
     const verifyBtn = document.getElementById("verifyBtn");
     const rejectBtn = document.getElementById("rejectBtn");
     const backBtn = document.getElementById("backBtn");
+    const pdfContent = document.getElementById("pdfContent");
     let submissionId = null;
     let currentRow = null;
 
@@ -98,6 +114,37 @@
       `;
     }
 
+    async function downloadAsPdf() {
+      if (!pdfContent || !window.html2pdf) {
+        alert("PDF export library not loaded");
+        return;
+      }
+
+      const printBtn = document.getElementById("printDetailsBtn");
+      if (printBtn) printBtn.disabled = true;
+
+      const employeeId = currentRow?.employee_id ? String(currentRow.employee_id).trim() : "submission";
+      const filename = `${employeeId}_details.pdf`;
+
+      const options = {
+        margin: 0.4,
+        filename,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+        pagebreak: { mode: ["css", "legacy"] }
+      };
+
+      try {
+        await window.html2pdf().set(options).from(pdfContent).save();
+      } catch (error) {
+        console.error(error);
+        alert("Failed to download PDF");
+      } finally {
+        if (printBtn) printBtn.disabled = false;
+      }
+    }
+
     function renderDetails(row) {
       const payload = row.payload || {};
       const personal = payload.personal || {};
@@ -111,7 +158,14 @@
       let html = `
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="mb-0">${displayValue(row.full_name || personal.fullName)}</h5>
-          ${statusBadge(row.status)}
+          <div class="d-flex align-items-center gap-2">
+            <button id="printDetailsBtn" class="print-btn" type="button" title="Download PDF" aria-label="Download PDF">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M2 7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3h-2v3H4v-3H2V7zm3-5h6v3H5V2zm1 10h4v2H6v-2z"/>
+              </svg>
+            </button>
+            ${statusBadge(row.status)}
+          </div>
         </div>
         ${block("Personal", `
           ${item("Employee ID", row.employee_id || personal.employeeId)}
@@ -293,6 +347,12 @@
 
     verifyBtn.addEventListener("click", verifySubmission);
     rejectBtn.addEventListener("click", rejectSubmission);
+    detailsRoot.addEventListener("click", (event) => {
+      const printBtn = event.target.closest("#printDetailsBtn");
+      if (printBtn) {
+        downloadAsPdf();
+      }
+    });
 
     (async function init() {
       await ensureLoggedIn();
