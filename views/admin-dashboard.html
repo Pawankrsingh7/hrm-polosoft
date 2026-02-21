@@ -1,0 +1,1646 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard | Employee Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-50: #eef2ff;
+      --primary-100: #e0e7ff;
+      --primary-200: #c7d2fe;
+      --primary-300: #a5b4fc;
+      --primary-400: #818cf8;
+      --primary-500: #6366f1;
+      --primary-600: #4f46e5;
+      --primary-700: #4338ca;
+      --primary-800: #3730a3;
+      --primary-900: #312e81;
+      
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      
+      --success-50: #f0fdf4;
+      --success-500: #22c55e;
+      --success-600: #16a34a;
+      --success-700: #15803d;
+      
+      --warning-50: #fffbeb;
+      --warning-500: #f59e0b;
+      --warning-600: #d97706;
+      
+      --error-50: #fef2f2;
+      --error-500: #ef4444;
+      --error-600: #dc2626;
+      
+      --info-50: #eff6ff;
+      --info-500: #3b82f6;
+      
+      --sidebar-width: 280px;
+      --sidebar-collapsed-width: 80px;
+      --header-height: 70px;
+      --border-radius-lg: 20px;
+      --border-radius-md: 14px;
+      --border-radius-sm: 10px;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      height: 100vh;
+      overflow: hidden;
+      color: var(--gray-800);
+    }
+
+    .dashboard-container {
+      height: 100vh;
+      padding: 16px;
+      background: white;
+    }
+
+    .dashboard-wrapper {
+      display: flex;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: linear-gradient(180deg, #796ef3cc 0%, #103387 100%);
+      color: white;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .sidebar.collapsed {
+      width: var(--sidebar-collapsed-width);
+    }
+
+    .sidebar-header {
+      padding: 24px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    /* .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    } */
+
+    .logo-image {
+      height: 62px;
+      width: auto;
+      object-fit: contain;
+      display: block;
+      /* background: #ffffff; */
+      padding: 6px 8px;
+      border-radius: 8px;
+    }
+
+    .sidebar.collapsed .logo-image,
+    .sidebar.collapsed .menu-label,
+    .sidebar.collapsed .user-info {
+      opacity: 0;
+      width: 0;
+      display: none;
+    }
+
+    .toggle-btn {
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    .nav-menu {
+      flex: 1;
+      padding: 20px 12px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      margin: 4px 0;
+      border-radius: var(--border-radius-sm);
+      color: rgba(255, 255, 255, 0.7);
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .nav-item.active {
+      background: var(--primary-600);
+      color: white;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    .nav-icon {
+      font-size: 20px;
+      width: 24px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .user-profile {
+      padding: 20px 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* .user-avatar {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary-400), var(--primary-600));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      color: white;
+      flex-shrink: 0;
+    } */
+
+    .user-info {
+      overflow: hidden;
+    }
+
+    .user-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: white;
+      white-space: nowrap;
+    }
+
+    .user-role {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+      white-space: nowrap;
+    }
+
+    /* Main Content Styles */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--gray-50);
+      overflow-y: auto;
+    }
+
+    .content-header {
+      background: white;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-title {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .header-title h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gray-800);
+      margin: 0;
+    }
+
+    .header-title p {
+      font-size: 14px;
+      color: var(--gray-500);
+      margin: 0;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      height: 42px;
+      padding: 0 20px;
+      border-radius: var(--border-radius-sm);
+      font-weight: 600;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--gray-200);
+      background: white;
+      color: var(--gray-700);
+      transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+      background: var(--gray-50);
+      border-color: var(--gray-300);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .action-btn.primary {
+      background: var(--primary-600);
+      border-color: var(--primary-600);
+      color: white;
+    }
+
+    .action-btn.primary:hover {
+      background: var(--primary-700);
+      border-color: var(--primary-700);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    .icon-btn {
+      width: 42px;
+      padding: 0;
+      justify-content: center;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      padding: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: var(--border-radius-md);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-200);
+      transition: all 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-200);
+    }
+
+    .stat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .stat-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .stat-icon.total { background: var(--info-50); color: var(--info-500); }
+    .stat-icon.verified { background: var(--success-50); color: var(--success-600); }
+    .stat-icon.pending { background: var(--warning-50); color: var(--warning-600); }
+    .stat-icon.rejected { background: var(--error-50); color: var(--error-600); }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--gray-800);
+      margin-bottom: 4px;
+    }
+
+    .stat-trend {
+      font-size: 12px;
+      color: var(--gray-500);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .trend-up { color: var(--success-600); }
+    .trend-down { color: var(--error-600); }
+
+    /* Table Section */
+    .table-section {
+      padding: 0 24px 24px;
+    }
+
+    .table-container {
+      background: white;
+      border-radius: var(--border-radius-md);
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .table-header {
+      padding: 16px 20px;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .table-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .table-title h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin: 0;
+    }
+
+    .table-badge {
+      background: var(--primary-100);
+      color: var(--primary-700);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .table-filters {
+      display: flex;
+      gap: 8px;
+    }
+
+    .filter-select {
+      height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--gray-700);
+      background: white;
+    }
+
+    .dashboard-table {
+      margin: 0;
+      width: 100%;
+    }
+
+    .dashboard-table thead th {
+      background: var(--gray-50);
+      color: var(--gray-600);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .dashboard-table tbody td {
+      padding: 16px 20px;
+      font-size: 14px;
+      color: var(--gray-700);
+      border-bottom: 1px solid var(--gray-100);
+      vertical-align: middle;
+    }
+
+    .dashboard-table tbody tr {
+      transition: all 0.2s;
+    }
+
+    .dashboard-table tbody tr:hover {
+      background: var(--primary-50);
+      cursor: pointer;
+    }
+
+    .select-col {
+      width: 50px;
+      text-align: center;
+    }
+
+    .row-checkbox {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 2px solid var(--gray-300);
+      cursor: pointer;
+      accent-color: var(--primary-600);
+    }
+
+    .employee-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .employee-avatar {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary-400), var(--primary-600));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .employee-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .employee-name {
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+
+    .employee-email {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+
+    .employee-id {
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 12px;
+      color: var(--gray-500);
+      background: var(--gray-100);
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-badge.verified {
+      background: var(--success-50);
+      color: var(--success-700);
+      border: 1px solid var(--success-200);
+    }
+
+    .status-badge.pending {
+      background: var(--warning-50);
+      color: var(--warning-700);
+      border: 1px solid var(--warning-200);
+    }
+
+    .status-badge.rejected {
+      background: var(--error-50);
+      color: var(--error-700);
+      border: 1px solid var(--error-200);
+    }
+
+    .review-note {
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--gray-600);
+      font-size: 13px;
+    }
+
+    .datetime {
+      font-size: 12px;
+      color: var(--gray-500);
+      white-space: nowrap;
+    }
+
+    .action-link {
+      color: var(--primary-600);
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .action-link:hover {
+      color: var(--primary-700);
+      text-decoration: underline;
+    }
+
+    /* Loading State */
+    .loading-skeleton {
+      padding: 40px;
+      text-align: center;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--gray-200);
+      border-top-color: var(--primary-600);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--gray-300);
+      border-radius: 20px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--gray-400);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 1024px) {
+      .dashboard-container {
+        padding: 0;
+      }
+      
+      .dashboard-wrapper {
+        border-radius: 0;
+      }
+      
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+      }
+      
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      
+      .main-content {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <div class="dashboard-wrapper">
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="logo-area">
+            <img src="/favicon.png" alt="Polosoft Logo" class="logo-image" />
+          </div>
+          <button class="toggle-btn" id="toggleSidebar">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+        </div>
+
+        <nav class="nav-menu">
+          <button class="nav-item active" data-filter="all">
+            <i class="bi bi-grid-1x2-fill nav-icon"></i>
+            <span class="menu-label">Dashboard</span>
+            <!-- <span class="nav-badge">12</span> -->
+          </button>
+          <!-- <button class="nav-item" data-filter="all">
+            <i class="bi bi-people-fill nav-icon"></i>
+            <span class="menu-label">All Employees</span>
+           
+          </button> -->
+          <button class="nav-item" data-filter="verified">
+            <i class="bi bi-check-circle-fill nav-icon" style="color: #22c55e;"></i>
+            <span class="menu-label">Verified</span>
+            <!-- <span class="nav-badge">32</span> -->
+          </button>
+          <button class="nav-item" data-filter="pending">
+            <i class="bi bi-exclamation-circle-fill nav-icon" style="color: #f59e0b;"></i>
+            <span class="menu-label">Pending</span>
+            <!-- <span class="nav-badge">8</span> -->
+          </button>
+          <button class="nav-item" data-filter="rejected">
+            <i class="bi bi-x-circle-fill nav-icon" style="color: #ef4444;"></i>
+            <span class="menu-label">Rejected</span>
+            <!-- <span class="nav-badge">4</span> -->
+          </button>
+          <button id="logoutBtn" class="nav-item">
+            <i class="bi bi-box-arrow-right nav-icon" style="color: #ef4444;"></i>
+            <span class="menu-label">Logout</span>
+          </button>
+          <!--
+          <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 16px 0;"></div>
+          <button class="nav-item">
+            <i class="bi bi-gear-fill nav-icon"></i>
+            <span class="menu-label">Settings</span>
+          </button>
+          <button class="nav-item">
+            <i class="bi bi-question-circle-fill nav-icon"></i>
+            <span class="menu-label">Help & Support</span>
+          </button>
+          -->
+        </nav>
+
+        <!-- user profile block intentionally removed -->
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Header -->
+        <header class="content-header">
+          <div class="header-title">
+            <h1>Employee Management</h1>
+            <p>Monitor and manage employee submissions</p>
+          </div>
+          <div class="header-actions">
+            <button class="action-btn icon-btn" id="refreshBtn" title="Refresh Data">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button class="action-btn icon-btn" id="printBtn" title="Download selected as ZIP">
+              <i class="bi bi-file-zip"></i>
+            </button>
+            <button class="action-btn primary" id="downloadBtn">
+              <i class="bi bi-file-earmark-spreadsheet"></i>
+              Export to Excel
+            </button>
+          </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Total Submissions</span>
+              <span class="stat-icon total"><i class="bi bi-people"></i></span>
+            </div>
+            <div class="stat-value" id="totalStats">0</div>
+            <div class="stat-trend">
+              <!-- <i class="bi bi-arrow-up trend-up"></i>
+              <span>+12% from last month</span> -->
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Verified</span>
+              <span class="stat-icon verified"><i class="bi bi-check-circle"></i></span>
+            </div>
+            <div class="stat-value" id="verifiedStats">0</div>
+            <div class="stat-trend">
+              <!-- <i class="bi bi-arrow-up trend-up"></i>
+              <span>+8% from last month</span> -->
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Pending</span>
+              <span class="stat-icon pending"><i class="bi bi-exclamation-circle"></i></span>
+            </div>
+            <div class="stat-value" id="pendingStats">0</div>
+            <div class="stat-trend">
+              <!-- <i class="bi bi-arrow-down trend-down"></i>
+              <span>-3% from last month</span> -->
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Rejected</span>
+              <span class="stat-icon rejected"><i class="bi bi-x-circle"></i></span>
+            </div>
+            <div class="stat-value" id="rejectedStats">0</div>
+            <!-- <div class="stat-trend">
+              <span>Needs attention</span>
+            </div> -->
+          </div>
+        </div>
+
+        <!-- Table Section -->
+        <div class="table-section">
+          <div class="table-container">
+            <div class="table-header">
+              <div class="table-title">
+                <h3>Employee Submissions</h3>
+                <!-- <span class="table-badge" id="totalRows">0 records</span> -->
+              </div>
+              <div class="table-filters">
+                <select class="filter-select" id="statusFilter">
+                  <option value="all">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="verified">Verified</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <input type="text" class="filter-select" placeholder="Search..." style="width: 200px;" id="searchInput">
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table dashboard-table">
+                <thead>
+                  <tr>
+                    <th class="select-col">
+                      <input type="checkbox" class="row-checkbox" id="selectAllRows">
+                    </th>
+                    <th>Employee</th>
+                    <th>ID</th>
+                    <th>Status</th>
+                    <th>Review Note</th>
+                    <th>Submitted At</th>
+                  </tr>
+                </thead>
+                <tbody id="submissionsBody">
+                  <tr>
+                    <td colspan="6" class="text-center">
+                      <div class="loading-skeleton">
+                        <div class="loading-spinner"></div>
+                        <p style="color: var(--gray-500);">Loading submissions...</p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    // All your existing JavaScript functionality remains exactly the same
+    let currentFilter = "all";
+    let currentRows = [];
+    const selectedSubmissionIds = new Set();
+    const tableBody = document.getElementById("submissionsBody");
+    const totalRows = document.getElementById("totalRows");
+    const selectAllRowsEl = document.getElementById("selectAllRows");
+    const sidebar = document.getElementById("sidebar");
+    const toggleBtn = document.getElementById("toggleSidebar");
+
+    // Toggle sidebar
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("collapsed");
+      const icon = toggleBtn.querySelector("i");
+      if (sidebar.classList.contains("collapsed")) {
+        icon.classList.remove("bi-chevron-left");
+        icon.classList.add("bi-chevron-right");
+      } else {
+        icon.classList.remove("bi-chevron-right");
+        icon.classList.add("bi-chevron-left");
+      }
+    });
+
+    // Status filter
+    const statusFilter = document.getElementById("statusFilter");
+    statusFilter.addEventListener("change", (e) => {
+      currentFilter = e.target.value;
+      loadSubmissions();
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById("searchInput");
+    let searchTimeout;
+    searchInput.addEventListener("input", (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        filterTable(e.target.value);
+      }, 300);
+    });
+
+    function filterTable(searchTerm) {
+      if (!searchTerm) {
+        renderRows(currentRows);
+        return;
+      }
+      
+      const filtered = currentRows.filter(row => 
+        row.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.employee_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.company_email?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      renderRows(filtered);
+    }
+
+    // Update stats
+    function updateStats(rows) {
+      const total = rows.length;
+      const verified = rows.filter(r => r.status?.toLowerCase() === 'verified').length;
+      const pending = rows.filter(r => r.status?.toLowerCase() === 'pending').length;
+      const rejected = rows.filter(r => r.status?.toLowerCase() === 'rejected').length;
+      
+      document.getElementById('totalStats').textContent = total;
+      document.getElementById('verifiedStats').textContent = verified;
+      document.getElementById('pendingStats').textContent = pending;
+      document.getElementById('rejectedStats').textContent = rejected;
+    }
+
+    // Your existing functions remain exactly the same
+    async function ensureLoggedIn() {
+      const response = await fetch("/api/admin/me", { credentials: "include" });
+      if (!response.ok) window.location.href = "/admin/login";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function statusBadge(status) {
+      const normalized = String(status || "Pending");
+      const lower = normalized.toLowerCase();
+      const cls = lower === "verified" ? "status-badge verified" : 
+                 lower === "rejected" ? "status-badge rejected" : 
+                 "status-badge pending";
+      const icon = lower === "verified" ? "bi-check-circle-fill" : 
+                  lower === "rejected" ? "bi-x-circle-fill" : 
+                  "bi-exclamation-circle-fill";
+      return `<span class="${cls}"><i class="bi ${icon}"></i>${escapeHtml(normalized)}</span>`;
+    }
+
+    function reviewNote(row) {
+      const status = String(row.status || "Pending").toLowerCase();
+      const reviewer = row.reviewer_name ? String(row.reviewer_name).trim() : "";
+
+      if (status === "verified") {
+        return reviewer ? `Reviewed by: ${escapeHtml(reviewer)}` : "Reviewed";
+      }
+      if (status === "rejected") {
+        return reviewer ? `Reviewed by: ${escapeHtml(reviewer)}` : "Reviewed";
+      }
+      return "-";
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "N/A";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return escapeHtml(value);
+      return escapeHtml(
+        date.toLocaleString("en-IN", {
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true
+        })
+      );
+    }
+
+    function getInitials(name) {
+      if (!name) return "EM";
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+
+    function syncSelectAllState() {
+      if (!selectAllRowsEl) return;
+      const totalVisibleRows = currentRows.length;
+      const selectedCount = selectedSubmissionIds.size;
+      if (totalVisibleRows === 0) {
+        selectAllRowsEl.checked = false;
+        selectAllRowsEl.indeterminate = false;
+        return;
+      }
+      selectAllRowsEl.checked = selectedCount === totalVisibleRows;
+      selectAllRowsEl.indeterminate = selectedCount > 0 && selectedCount < totalVisibleRows;
+    }
+
+    function renderRows(rows) {
+      currentRows = rows;
+      updateStats(rows);
+      
+      if (selectAllRowsEl) {
+        selectAllRowsEl.checked = false;
+        selectAllRowsEl.indeterminate = false;
+      }
+
+      if (!rows.length) {
+        tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-5">No submissions found</td></tr>`;
+        return;
+      }
+
+      tableBody.innerHTML = rows.map((row) => {
+        const initials = getInitials(row.full_name);
+        return `
+        <tr class="clickable-row" data-row-id="${row.id}">
+          <td class="select-col">
+            <input class="row-checkbox" type="checkbox" data-row-id="${row.id}" aria-label="Select ${escapeHtml(row.full_name || "row")}" />
+          </td>
+          <td>
+            <div class="employee-info">
+              <div class="employee-avatar">${initials}</div>
+              <div class="employee-details">
+                <span class="employee-name">${escapeHtml(row.full_name || "N/A")}</span>
+                <span class="employee-email">${escapeHtml(row.company_email || "N/A")}</span>
+              </div>
+            </div>
+          </td>
+          <td><span class="employee-id">${escapeHtml(row.employee_id || "N/A")}</span></td>
+          <td>${statusBadge(row.status)}</td>
+          <td><span class="review-note">${reviewNote(row)}</span></td>
+          <td><span class="datetime"><i class="bi bi-clock me-1"></i>${formatDateTime(row.created_at)}</span></td>
+        </tr>
+      `}).join("");
+
+      tableBody.querySelectorAll(".row-checkbox").forEach((checkbox) => {
+        checkbox.addEventListener("change", () => {
+          const id = Number(checkbox.dataset.rowId);
+          if (!Number.isInteger(id)) return;
+          if (checkbox.checked) {
+            selectedSubmissionIds.add(id);
+          } else {
+            selectedSubmissionIds.delete(id);
+          }
+          syncSelectAllState();
+        });
+      });
+
+      tableBody.querySelectorAll("tr.clickable-row").forEach((rowEl) => {
+        rowEl.addEventListener("click", (event) => {
+          const interactiveEl = event.target.closest("input, button, a, label");
+          if (interactiveEl) return;
+          const id = rowEl.dataset.rowId;
+          if (!id) return;
+          window.location.href = `/admin/submissions/${encodeURIComponent(id)}?fromStatus=${encodeURIComponent(currentFilter)}`;
+        });
+      });
+    }
+
+    async function loadSubmissions() {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center">
+            <div class="loading-skeleton">
+              <div class="loading-spinner"></div>
+              <p style="color: var(--gray-500);">Loading submissions...</p>
+            </div>
+          </td>
+        </tr>
+      `;
+      
+      const query = currentFilter === "all" ? "" : `?status=${encodeURIComponent(currentFilter)}`;
+      const response = await fetch(`/api/admin/submissions${query}`, { credentials: "include" });
+      if (response.status === 401) {
+        window.location.href = "/admin/login";
+        return;
+      }
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${escapeHtml(data.message || "Failed to load submissions")}</td></tr>`;
+        return;
+      }
+      
+      renderRows(data.rows || []);
+      
+      const url = new URL(window.location.href);
+      url.searchParams.set("status", currentFilter);
+      window.history.replaceState({}, "", url.toString());
+    }
+
+    async function downloadCsv() {
+      const downloadBtn = document.getElementById("downloadBtn");
+      const previousText = downloadBtn.innerHTML;
+      downloadBtn.disabled = true;
+      downloadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Preparing...';
+
+      try {
+        if (!window.XLSX) {
+          throw new Error("Excel library not loaded.");
+        }
+
+        const exportStatus = currentFilter && currentFilter !== "all" ? currentFilter : "all";
+        const listResponse = await fetch(`/api/admin/submissions?status=${encodeURIComponent(exportStatus)}`, { credentials: "include" });
+        const listData = await listResponse.json().catch(() => ({}));
+        if (!listResponse.ok || !Array.isArray(listData.rows)) {
+          throw new Error(listData.message || "Failed to load employee list.");
+        }
+
+        if (!listData.rows.length) {
+          throw new Error("No rows available to export.");
+        }
+
+        const detailedRows = [];
+        for (const row of listData.rows) {
+          const id = Number(row.id);
+          if (!Number.isInteger(id)) continue;
+          const response = await fetch(`/api/admin/submissions/${id}`, { credentials: "include" });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.row) {
+            throw new Error(data.message || `Failed to load submission ${id}`);
+          }
+          detailedRows.push(data.row);
+        }
+
+        const exportRows = [];
+
+        const safe = (v) => (v === null || v === undefined ? "" : String(v));
+
+        detailedRows.forEach((row) => {
+          const payload = row.payload || {};
+          const personal = payload.personal || {};
+          const employeeDetails = payload.employeeDetails || {};
+          const address = payload.address || {};
+          const identification = payload.identification || {};
+          const bank = payload.bank || {};
+          const education = Array.isArray(payload.education) ? payload.education : [];
+          const experience = Array.isArray(payload.experience) ? payload.experience : [];
+
+          const eduLen = Math.max(education.length, 1);
+          const expLen = Math.max(experience.length, 1);
+          const rowCount = Math.max(eduLen, expLen);
+
+          const baseData = {
+            "Submission ID": safe(row.id),
+            "Employee ID": safe(row.employee_id || personal.employeeId || employeeDetails.employeeId),
+            "Full Name": safe(row.full_name || personal.fullName),
+            "Salutation": safe(personal.salutation),
+            "Father Name": safe(personal.fatherName),
+            "Contact Number": safe(personal.contactNumber),
+            "Gender": safe(personal.gender),
+            "Marital Status": safe(personal.maritalStatus),
+            "Date Of Birth": safe(personal.dateOfBirth),
+            "Blood Group": safe(personal.bloodGroup),
+            "Emergency Contact Name": safe(personal.emergencyContactName),
+            "Emergency Contact Number": safe(personal.emergencyContactNumber),
+            "Emergency Contact Relation": safe(personal.emergencyContactRelation),
+
+            "Date Of Joining": safe(employeeDetails.dateOfJoining),
+            "Personal Email": safe(employeeDetails.personalEmail || address.personalEmail || row.personal_email),
+            "Company Email": safe(employeeDetails.companyEmail || address.companyEmail || row.company_email),
+
+            "Current Address": safe(address.currentAddress),
+            "Permanent Address": safe(address.permanentAddress),
+            "Country": safe(address.country),
+            "State": safe(address.state),
+            "District": safe(address.district),
+            "City": safe(address.city),
+            "Pincode": safe(address.pincode),
+
+            "Aadhar Number": safe(identification.aadharNumber),
+            "PAN Number": safe(identification.panNumber),
+            "UAN Number": safe(identification.uanNumber),
+            "Passport Number": safe(identification.passportNumber),
+            "Passport Valid Upto": safe(identification.passportValidUpto),
+
+            "Bank Name": safe(bank.bankName),
+            "Account Number": safe(bank.accountNumber),
+            "IFSC Code": safe(bank.ifscCode),
+            "Bank Holder Name": safe(bank.bankHolderName),
+
+            "Status": safe(row.status),
+            "Reviewer Name": safe(row.reviewer_name),
+            "Rejection Reason": safe(row.rejection_reason),
+            "Submitted At": safe(row.created_at),
+            "Reviewed At": safe(row.reviewed_at)
+          };
+
+          const emptyBaseData = Object.fromEntries(
+            Object.keys(baseData).map((key) => [key, ""])
+          );
+
+          for (let i = 0; i < rowCount; i++) {
+            const edu = education[i] || {};
+            const exp = experience[i] || {};
+            const employeeColumns = i === 0 ? baseData : emptyBaseData;
+
+            exportRows.push({
+              ...employeeColumns,
+
+              "Education Level": safe(edu.level),
+              "Education Qualification": safe(edu.qualification),
+              "Education Specialization": safe(edu.specialization),
+              "Education Year": safe(edu.yearOfPassing),
+              "Education Board/University": safe(edu.boardUniversity),
+              "Education CGPA/%": safe(edu.cgpa),
+
+              "Experience Organization": safe(exp.organization),
+              "Experience Designation": safe(exp.designation),
+              "Experience From Date": safe(exp.fromDate),
+              "Experience To Date": safe(exp.toDate),
+              "Experience Company Address": safe(exp.experienceAddress),
+              "Experience Company Contact": safe(exp.companyContact),
+              "Experience CTC": safe(exp.ctc),
+              "Experience Reason For Leaving": safe(exp.reasonForLeaving)
+            });
+          }
+        });
+
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.json_to_sheet(exportRows);
+
+        // Set readable column widths
+        worksheet["!cols"] = Object.keys(exportRows[0] || {}).map((key) => ({
+          wch: Math.min(Math.max(key.length + 2, 14), 36)
+        }));
+
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
+        XLSX.writeFile(workbook, `employee_details_${new Date().toISOString().split("T")[0]}.xlsx`);
+      } catch (error) {
+        alert(error.message || "Failed to generate export.");
+      } finally {
+        downloadBtn.disabled = false;
+        downloadBtn.innerHTML = '<i class="bi bi-file-earmark-spreadsheet"></i> Export to Excel';
+      }
+    }
+
+    async function downloadSelectedAsZip() {
+      if (!selectedSubmissionIds.size) {
+        alert("Please select at least one row to download.");
+        return;
+      }
+      if (!window.JSZip || !window.jspdf || !window.html2canvas) {
+        alert("PDF/ZIP libraries are not loaded.");
+        return;
+      }
+      
+      const printBtn = document.getElementById("printBtn");
+      const oldBtnHtml = printBtn.innerHTML;
+      printBtn.disabled = true;
+      printBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+
+      try {
+        const zip = new window.JSZip();
+        const ids = Array.from(selectedSubmissionIds.values());
+
+        for (let i = 0; i < ids.length; i++) {
+          const id = ids[i];
+          printBtn.innerHTML = `<i class="bi bi-hourglass-split"></i> ${i + 1}/${ids.length}`;
+
+          const response = await fetch(`/api/admin/submissions/${id}`, { credentials: "include" });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.row) {
+            throw new Error(data.message || `Failed to load submission ${id}`);
+          }
+
+          const row = data.row;
+          const pdfBlob = await generatePdfBlobFromRow(row);
+          const fileName = buildPdfFileName(row);
+          zip.file(fileName, pdfBlob);
+        }
+
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+        const zipUrl = URL.createObjectURL(zipBlob);
+        const a = document.createElement("a");
+        a.href = zipUrl;
+        a.download = `employee_details_${new Date().toISOString().split("T")[0]}.zip`;
+        a.click();
+        URL.revokeObjectURL(zipUrl);
+      } catch (error) {
+        alert(error.message || "Failed to generate ZIP file.");
+      } finally {
+        printBtn.disabled = false;
+        printBtn.innerHTML = oldBtnHtml;
+      }
+    }
+
+    function textOrNA(value) {
+      if (value === null || value === undefined) return "N/A";
+      const text = String(value).trim();
+      return text || "N/A";
+    }
+
+    function safeFileToken(value, fallback) {
+      const normalized = String(value || "")
+        .trim()
+        .replace(/\s+/g, "_")
+        .replace(/[^a-zA-Z0-9_\-]/g, "");
+      return normalized || fallback;
+    }
+
+    function buildPdfFileName(row) {
+      const payload = row.payload || {};
+      const personal = payload.personal || {};
+      const employeeDetails = payload.employeeDetails || {};
+      const employeeId = safeFileToken(
+        row.employee_id || personal.employeeId || employeeDetails.employeeId,
+        "Employee"
+      );
+      const fullName = safeFileToken(
+        row.full_name || personal.fullName,
+        "Details"
+      );
+      return `${employeeId}_${fullName}.pdf`;
+    }
+
+    function buildPdfSectionHtml(title, pairs) {
+      const items = pairs.map(([label, value]) => `
+        <div style="font-size:12px;line-height:1.45;color:#111827;word-break:break-word;">
+          <strong style="color:#1f2937;">${escapeHtml(label)}:</strong> ${escapeHtml(textOrNA(value))}
+        </div>
+      `).join("");
+
+      return `
+        <section data-pdf-block="1" style="background:#fff;border:1px solid #d9e1ee;border-radius:10px;margin-bottom:12px;overflow:hidden;">
+          <div style="background:#eff6ff;color:#1d4ed8;font-size:14px;font-weight:700;padding:8px 12px;border-bottom:1px solid #d9e1ee;">
+            ${escapeHtml(title)}
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;padding:10px 12px;">
+            ${items}
+          </div>
+        </section>
+      `;
+    }
+
+    function buildPdfTableSectionHtml(title, headers, rows, forcePageBreak = false) {
+      const tableHead = headers.map((h) => `
+        <th style="background:#f1f5f9;color:#334155;font-size:11px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;padding:9px 8px;border-bottom:1px solid #d9e1ee;text-align:left;">
+          ${escapeHtml(h)}
+        </th>
+      `).join("");
+
+      const tableRows = rows.length
+        ? rows.map((cells) => `
+            <tr>
+              ${cells.map((cell, idx) => `
+                <td style="background:#fff;color:#111827;font-size:11.5px;padding:9px 8px;border-bottom:${idx === headers.length - 1 ? "1px solid #e5e7eb" : "1px solid #e5e7eb"};word-break:break-word;vertical-align:top;">
+                  ${escapeHtml(textOrNA(cell))}
+                </td>
+              `).join("")}
+            </tr>
+          `).join("")
+        : `<tr><td colspan="${headers.length}" style="padding:9px 8px;font-size:11.5px;color:#64748b;">No data available</td></tr>`;
+
+      return `
+        <section data-pdf-block="1" class="${forcePageBreak ? "pdf-break-before" : ""}" style="background:#fff;border:1px solid #d9e1ee;border-radius:10px;margin-bottom:12px;overflow:hidden;">
+          <div style="background:#eff6ff;color:#1d4ed8;font-size:14px;font-weight:700;padding:8px 12px;border-bottom:1px solid #d9e1ee;">
+            ${escapeHtml(title)}
+          </div>
+          <div style="padding:10px 12px;">
+            <table style="width:100%;border-collapse:collapse;border:1px solid #d9e1ee;border-radius:8px;overflow:hidden;table-layout:fixed;">
+              <thead><tr>${tableHead}</tr></thead>
+              <tbody>${tableRows}</tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    function buildPdfTemplateHtml(row) {
+      const payload = row.payload || {};
+      const personal = payload.personal || {};
+      const employeeDetails = payload.employeeDetails || {};
+      const address = payload.address || {};
+      const identification = payload.identification || {};
+      const bank = payload.bank || {};
+      const other = payload.other || {};
+
+      const education = (Array.isArray(payload.education) ? payload.education : []).filter((edu) =>
+        [edu?.level, edu?.qualification, edu?.specialization, edu?.yearOfPassing, edu?.boardUniversity, edu?.cgpa]
+          .some((v) => String(v || "").trim())
+      );
+      const experience = (Array.isArray(payload.experience) ? payload.experience : []).filter((exp) =>
+        [exp?.organization, exp?.designation, exp?.fromDate, exp?.toDate, exp?.experienceAddress, exp?.companyContact, exp?.ctc, exp?.reasonForLeaving]
+          .some((v) => String(v || "").trim())
+      );
+
+      const resolvedEmployeeId = employeeDetails.employeeId || row.employee_id || personal.employeeId || "";
+      const resolvedCompanyEmail = employeeDetails.companyEmail || address.companyEmail || row.company_email || "";
+      const fullName = row.full_name || personal.fullName || "";
+      const status = String(row.status || "Pending").toLowerCase();
+
+      let html = `
+        <div id="pdfExportSheet" style="width:794px;background:#f3f5f9;color:#0f172a;font-family:'Inter',sans-serif;padding:28px;">
+          <div data-pdf-block="1" style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #dbe3f3;">
+            <div>
+              <h1 style="font-size:22px;font-weight:800;color:#1d4ed8;margin:0 0 4px;">Employee Details Report</h1>
+              <p style="font-size:12px;color:#475569;margin:0;">${escapeHtml(textOrNA(fullName))} | ID: ${escapeHtml(textOrNA(resolvedEmployeeId))}</p>
+            </div>
+          </div>
+
+          ${buildPdfSectionHtml("Personal Information", [
+            ["Salutation", personal.salutation],
+            ["Full Name", personal.fullName],
+            ["Father's Name", personal.fatherName],
+            ["Contact Number", personal.contactNumber],
+            ["Gender", personal.gender],
+            ["Marital Status", personal.maritalStatus],
+            ["Date of Birth", personal.dateOfBirth],
+            ["Blood Group", personal.bloodGroup],
+            ["Emergency Contact", personal.emergencyContactName],
+            ["Emergency Contact Number", personal.emergencyContactNumber],
+            ["Emergency Contact Relation", personal.emergencyContactRelation]
+          ])}
+
+          ${buildPdfSectionHtml("Employee Details", [
+            ["Employee ID", resolvedEmployeeId],
+            ["Date of Joining", employeeDetails.dateOfJoining],
+            ["Personal Email", employeeDetails.personalEmail || address.personalEmail || row.personal_email],
+            ["Company Email", resolvedCompanyEmail]
+          ])}
+
+          ${buildPdfSectionHtml("Address Details", [
+            ["Current Address", address.currentAddress],
+            ["Permanent Address", address.permanentAddress],
+            ["Country", address.country],
+            ["State", address.state],
+            ["District", address.district],
+            ["City", address.city],
+            ["Pincode", address.pincode]
+          ])}
+
+          ${buildPdfSectionHtml("Identification Details", [
+            ["Aadhar Number", identification.aadharNumber],
+            ["PAN Number", identification.panNumber],
+            ["UAN Number", identification.uanNumber],
+            ["Passport Number", identification.passportNumber],
+            ["Passport Valid Upto", identification.passportValidUpto]
+          ])}
+
+          ${buildPdfSectionHtml("Bank Details", [
+            ["Bank Name", bank.bankName],
+            ["Account Number", bank.accountNumber],
+            ["IFSC Code", bank.ifscCode],
+            ["Bank Holder Name", bank.bankHolderName]
+          ])}
+
+          ${buildPdfTableSectionHtml(
+            "Education Details",
+            ["Level", "Qualification", "Specialization", "Year", "Board/University", "CGPA/%"],
+            education.map((edu) => [
+              edu.level,
+              edu.qualification,
+              edu.specialization,
+              edu.yearOfPassing,
+              edu.boardUniversity,
+              edu.cgpa
+            ])
+          )}
+
+          ${buildPdfTableSectionHtml(
+            "Work Experience",
+            ["Organization", "Designation", "From Date", "To Date", "Company Address", "Company Contact", "CTC", "Reason For Leaving"],
+            experience.map((exp) => [
+              exp.organization,
+              exp.designation,
+              exp.fromDate,
+              exp.toDate || "Present",
+              exp.experienceAddress,
+              exp.companyContact,
+              exp.ctc,
+              exp.reasonForLeaving
+            ]),
+            true
+          )}
+      `;
+
+      if (status === "verified" || status === "rejected") {
+        html += buildPdfSectionHtml("Review Decision", [
+          ["Final Status", row.status],
+          ["Reviewer Name", row.reviewer_name],
+          ["Review Note", status === "rejected" ? (row.rejection_reason || "N/A") : "Verified by reviewer"],
+          ["Reviewed At", row.reviewed_at]
+        ]);
+      }
+
+      html += buildPdfSectionHtml("Submission Metadata", [
+        ["Submitted At", row.created_at],
+        ["Details Confirmation", other.detailsConfirmation ? "Yes" : "No"]
+      ]);
+
+      html += `</div>`;
+      return html;
+    }
+
+    async function generatePdfBlobFromRow(row) {
+      const tempContainer = document.createElement("div");
+      tempContainer.style.position = "fixed";
+      tempContainer.style.left = "-10000px";
+      tempContainer.style.top = "0";
+      tempContainer.style.zIndex = "-1";
+      tempContainer.innerHTML = buildPdfTemplateHtml(row);
+      document.body.appendChild(tempContainer);
+
+      try {
+        const blocks = Array.from(tempContainer.querySelectorAll("[data-pdf-block='1']"));
+        const firstPageBlocks = [];
+        const secondPageBlocks = [];
+        let movedToSecondPage = false;
+
+        blocks.forEach((block) => {
+          if (block.classList.contains("pdf-break-before")) movedToSecondPage = true;
+          if (movedToSecondPage) secondPageBlocks.push(block);
+          else firstPageBlocks.push(block);
+        });
+
+        const renderBlocksAsCanvas = async (targetBlocks) => {
+          const pageContainer = document.createElement("div");
+          pageContainer.style.width = "794px";
+          pageContainer.style.background = "#f3f5f9";
+          pageContainer.style.padding = "28px";
+          targetBlocks.forEach((b) => pageContainer.appendChild(b.cloneNode(true)));
+          tempContainer.appendChild(pageContainer);
+
+          const canvas = await window.html2canvas(pageContainer, {
+            scale: 2,
+            backgroundColor: "#f3f5f9",
+            logging: false,
+            useCORS: true,
+            windowWidth: 794
+          });
+          pageContainer.remove();
+          return canvas;
+        };
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF("p", "mm", "a4");
+
+        const drawCanvasToPdf = (canvas, addPageFirst) => {
+          if (addPageFirst) doc.addPage();
+
+          const imgData = canvas.toDataURL("image/png");
+          const pageWidth = 210;
+          const pageHeight = 297;
+          const margin = 8;
+          const imgWidth = pageWidth - margin * 2;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+          let heightLeft = imgHeight;
+          let position = margin;
+
+          doc.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
+          heightLeft -= (pageHeight - margin * 2);
+
+          while (heightLeft > 0) {
+            doc.addPage();
+            position = margin - (imgHeight - heightLeft);
+            doc.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
+            heightLeft -= (pageHeight - margin * 2);
+          }
+        };
+
+        const firstCanvas = await renderBlocksAsCanvas(firstPageBlocks);
+        drawCanvasToPdf(firstCanvas, false);
+
+        if (secondPageBlocks.length) {
+          const secondCanvas = await renderBlocksAsCanvas(secondPageBlocks);
+          drawCanvasToPdf(secondCanvas, true);
+        }
+
+        return doc.output("blob");
+      } finally {
+        if (tempContainer.parentNode) {
+          tempContainer.parentNode.removeChild(tempContainer);
+        }
+      }
+    }
+
+    // Event listeners
+    document.querySelectorAll('.nav-item[data-filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        statusFilter.value = currentFilter;
+        loadSubmissions();
+      });
+    });
+
+    if (selectAllRowsEl) {
+      selectAllRowsEl.addEventListener("change", () => {
+        const checked = selectAllRowsEl.checked;
+        tableBody.querySelectorAll(".row-checkbox").forEach((checkbox) => {
+          checkbox.checked = checked;
+          const id = Number(checkbox.dataset.rowId);
+          if (!Number.isInteger(id)) return;
+          if (checked) {
+            selectedSubmissionIds.add(id);
+          } else {
+            selectedSubmissionIds.delete(id);
+          }
+        });
+        syncSelectAllState();
+      });
+    }
+
+    document.getElementById("printBtn").addEventListener("click", downloadSelectedAsZip);
+    document.getElementById("refreshBtn").addEventListener("click", loadSubmissions);
+    document.getElementById("downloadBtn").addEventListener("click", downloadCsv);
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
+      window.location.href = "/admin/login";
+    });
+
+    // Initialize
+    (async function init() {
+      await ensureLoggedIn();
+      await loadSubmissions();
+    })();
+  </script>
+</body>
+</html>
