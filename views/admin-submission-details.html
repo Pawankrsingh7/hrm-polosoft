@@ -326,6 +326,27 @@
       color: var(--primary-600);
     }
 
+    .revert-reject-btn {
+      height: 44px;
+      border-radius: 12px;
+      padding: 0 14px;
+      background: var(--error-50);
+      border: 1px solid #fecaca;
+      color: var(--error-700);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .revert-reject-btn:hover {
+      background: #fee2e2;
+      border-color: #fca5a5;
+      color: #991b1b;
+    }
+
     /* Section Styles */
     .section-card {
       background: white;
@@ -1068,6 +1089,8 @@
       const resolvedEmployeeId = employeeDetails.employeeId || row.employee_id || personal.employeeId || "";
       const resolvedCompanyEmail = employeeDetails.companyEmail || address.companyEmail || row.company_email || "";
       const fullName = row.full_name || personal.fullName || "";
+      const currentStatus = String(row.status || "Pending").toLowerCase();
+      const canRevertReject = currentStatus === "verified";
 
       const status = String(row.status || "Pending");
 
@@ -1196,6 +1219,8 @@
       const resolvedPersonalEmail = employeeDetails.personalEmail || address.personalEmail || row.personal_email || "";
       const resolvedCompanyEmail = employeeDetails.companyEmail || address.companyEmail || row.company_email || "";
       const fullName = row.full_name || personal.fullName || "";
+      const currentStatus = String(row.status || "Pending").toLowerCase();
+      const canRevertReject = currentStatus === "verified";
 
       // Profile Card
       let html = `
@@ -1218,10 +1243,18 @@
               </div>
             </div>
             <div class="d-flex align-items-center gap-3">
-              ${statusBadge(row.status)}
               <button id="printBtn" class="print-btn" title="Download PDF">
                 <i class="bi bi-printer"></i>
               </button>
+              ${
+                canRevertReject
+                  ? `<button id="revertRejectBtn" class="revert-reject-btn" title="Delete verified employee record">
+                      <i class="bi bi-arrow-counterclockwise"></i>
+                      Revert & Reject
+                    </button>`
+                  : ""
+              }
+              ${statusBadge(row.status)}
             </div>
           </div>
         </div>
@@ -1470,6 +1503,50 @@
       }
     }
 
+    async function revertRejectSubmission() {
+      const reviewerName = window.prompt("Enter reviewer name:");
+      if (reviewerName === null) return;
+      if (!reviewerName.trim()) {
+        alert("Reviewer name is required");
+        return;
+      }
+
+      const reason = window.prompt("Enter reason for revert and delete:");
+      if (reason === null) return;
+      if (!reason.trim()) {
+        alert("Rejection reason is required");
+        return;
+      }
+
+      const confirmed = window.confirm(
+        "This will permanently delete this verified employee record from database. Continue?"
+      );
+      if (!confirmed) return;
+
+      try {
+        const response = await fetch(`/api/admin/submissions/${submissionId}/revert-reject`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            reviewerName: reviewerName.trim(),
+            rejectionReason: reason.trim()
+          })
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          alert(data.message || "Failed to delete verified employee");
+          return;
+        }
+
+        alert("Verified employee deleted successfully");
+        window.location.href = "/admin?status=verified";
+      } catch (error) {
+        alert("Failed to delete verified employee");
+      }
+    }
+
     async function downloadAsPdf() {
       if (!window.jspdf || !window.jspdf.jsPDF || !window.html2canvas) {
         alert("PDF library not loaded");
@@ -1618,6 +1695,11 @@
       const printBtn = event.target.closest("#printBtn");
       if (printBtn) {
         downloadAsPdf();
+      }
+
+      const revertRejectBtn = event.target.closest("#revertRejectBtn");
+      if (revertRejectBtn) {
+        revertRejectSubmission();
       }
     });
 

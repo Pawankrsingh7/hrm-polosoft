@@ -300,7 +300,7 @@ app.get("/api/onboarding/submissions", async (_req, res) => {
       SELECT id, employee_id, full_name, contact_number, personal_email, company_email, status, created_at
       FROM onboarding_submissions
       ORDER BY created_at DESC
-      LIMIT 100
+      LIMIT 300
     `);
     res.json({ ok: true, count: result.rowCount, rows: result.rows });
   } catch (error) {
@@ -557,6 +557,95 @@ app.post("/api/admin/submissions/:id/reject", requireAdminApi, async (req, res) 
     client.release();
   }
 });
+
+app.post(
+  "/api/admin/submissions/:id/revert-reject",
+  requireAdminApi,
+  async (req, res) => {
+    const client = await pool.connect();
+    try {
+      const id = Number(req.params.id);
+      const reviewerName = String(req.body?.reviewerName || "").trim();
+      const rejectionReason = String(req.body?.rejectionReason || "").trim();
+
+      if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({ ok: false, message: "Invalid submission id" });
+      }
+      if (!reviewerName) {
+        return res.status(400).json({ ok: false, message: "Reviewer name is required" });
+      }
+      if (!rejectionReason) {
+        return res.status(400).json({ ok: false, message: "Rejection reason is required" });
+      }
+
+      await client.query("BEGIN");
+
+      const existing = await client.query(
+        `
+        SELECT id, employee_id, status
+        FROM onboarding_submissions
+        WHERE id = $1
+        FOR UPDATE
+        `,
+        [id]
+      );
+
+      if (existing.rowCount === 0) {
+        await client.query("ROLLBACK");
+        return res.status(404).json({ ok: false, message: "Submission not found" });
+      }
+
+      const row = existing.rows[0];
+      if (String(row.status || "").toLowerCase() !== "verified") {
+        await client.query("ROLLBACK");
+        return res.status(400).json({
+          ok: false,
+          message: "Only verified submissions can be reverted and deleted",
+        });
+      }
+
+      if (!row.employee_id) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({
+          ok: false,
+          message: "Employee id is missing for this submission",
+        });
+      }
+
+      const deleted = await client.query(
+        `
+        DELETE FROM onboarding_submissions
+        WHERE id = $1 AND employee_id = $2
+        RETURNING id, employee_id
+        `,
+        [id, row.employee_id]
+      );
+
+      if (deleted.rowCount === 0) {
+        await client.query("ROLLBACK");
+        return res.status(404).json({ ok: false, message: "Submission not found for employee id" });
+      }
+
+      await client.query("COMMIT");
+      return res.json({
+        ok: true,
+        message: "Verified employee record deleted successfully",
+        reviewerName,
+        rejectionReason,
+        deleted: deleted.rows[0],
+      });
+    } catch (error) {
+      await client.query("ROLLBACK");
+      return res.status(500).json({
+        ok: false,
+        message: "Failed to revert and delete verified submission",
+        error: error.message,
+      });
+    } finally {
+      client.release();
+    }
+  }
+);
 
 app.use(express.static(path.join(__dirname)));
 
