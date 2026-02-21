@@ -2,6 +2,7 @@ const path = require("path");
 const crypto = require("crypto");
 const express = require("express");
 const cors = require("cors");
+const nodemailer = require("nodemailer");
 const { Pool } = require("pg");
 require("dotenv").config();
 
@@ -14,6 +15,16 @@ const ADMIN_SESSION_SECRET =
   process.env.ADMIN_SESSION_SECRET || "replace-this-secret-in-production";
 const SESSION_COOKIE_NAME = "admin_session";
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+const SMTP_HOST = process.env.SMTP_HOST || "";
+const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
+const SMTP_SECURE = process.env.SMTP_SECURE === "true";
+const SMTP_USER = process.env.SMTP_USER || "";
+const SMTP_PASS = process.env.SMTP_PASS || "";
+const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || "HR Team";
+const SMTP_FROM_EMAIL = process.env.SMTP_FROM_EMAIL || SMTP_USER;
+const mailerEnabled = Boolean(
+  SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && SMTP_FROM_EMAIL
+);
 
 const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
 const hasDiscreteConfig = Boolean(
@@ -47,10 +58,191 @@ const poolConfig = hasDatabaseUrl
     };
 
 const pool = new Pool(poolConfig);
+const mailTransporter = mailerEnabled
+  ? nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_SECURE,
+      auth: {
+        user: SMTP_USER,
+        pass: SMTP_PASS,
+      },
+    })
+  : null;
 
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function buildEmployeeNotificationHtml({ title, fullName, message, highlights = [] }) {
+  const safeTitle = escapeHtml(title);
+  const safeName = escapeHtml(fullName || "Employee");
+  const safeMessage = escapeHtml(message);
+  const highlightsHtml = highlights
+    .map(
+      (item) => `
+        <tr>
+          <td style="padding:10px 12px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600;color:#111827;">${escapeHtml(
+            item.label
+          )}</td>
+          <td style="padding:10px 12px;border:1px solid #e5e7eb;color:#1f2937;">${escapeHtml(
+            item.value || "N/A"
+          )}</td>
+        </tr>
+      `
+    )
+    .join("");
+
+  return `
+    <div style="margin:0;padding:24px;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+      <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
+        <div style="padding:18px 24px;background:#1f3b8a;color:#ffffff;">
+          <h2 style="margin:0;font-size:20px;line-height:1.3;">${safeTitle}</h2>
+        </div>
+        <div style="padding:24px;">
+          <p style="margin:0 0 14px;font-size:15px;">Dear ${safeName},</p>
+          <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#374151;">${safeMessage}</p>
+          <table style="width:100%;border-collapse:collapse;border-spacing:0;margin:0 0 18px;">
+            <tbody>
+              ${highlightsHtml}
+            </tbody>
+          </table>
+          <p style="margin:0;font-size:14px;color:#4b5563;">If you need help, please contact the HR team.</p>
+        </div>
+        <div style="padding:14px 24px;background:#f9fafb;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280;">
+          This is an automated message from HRMS. Please do not reply to this email.
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function sendEmployeeNotificationEmail({ to, subject, html }) {
+  if (!to || !mailerEnabled || !mailTransporter) return false;
+  try {
+    await mailTransporter.sendMail({
+      from: `"${SMTP_FROM_NAME}" <${SMTP_FROM_EMAIL}>`,
+      to,
+      subject,
+      html,
+    });
+    return true;
+  } catch (error) {
+    console.error("Email send failed:", error.message);
+    return false;
+  }
+}
+
+async function sendSubmissionNotificationEmail({
+  personalEmail,
+  fullName,
+  employeeId,
+  submissionId,
+  createdAt,
+}) {
+  return sendEmployeeNotificationEmail({
+    to: personalEmail,
+    subject: "Application Received - HR Onboarding",
+    html: buildEmployeeNotificationHtml({
+      title: "Application Received",
+      fullName,
+      message:
+        "Your onboarding application has been received successfully and is now under review.",
+      highlights: [
+        { label: "Submission ID", value: submissionId },
+        { label: "Employee ID", value: employeeId },
+        { label: "Submitted At", value: createdAt },
+        { label: "Current Status", value: "Pending Review" },
+      ],
+    }),
+  });
+}
+
+async function sendApprovedNotificationEmail({
+  personalEmail,
+  fullName,
+  employeeId,
+  reviewerName,
+  reviewedAt,
+}) {
+  return sendEmployeeNotificationEmail({
+    to: personalEmail,
+    subject: "Application Approved - HR Onboarding",
+    html: buildEmployeeNotificationHtml({
+      title: "Application Approved",
+      fullName,
+      message:
+        "Your onboarding application has been approved after review. Welcome onboard.",
+      highlights: [
+        { label: "Employee ID", value: employeeId },
+        { label: "Final Status", value: "Verified" },
+        { label: "Reviewed By", value: reviewerName },
+        { label: "Reviewed At", value: reviewedAt },
+      ],
+    }),
+  });
+}
+
+async function sendRejectedNotificationEmail({
+  personalEmail,
+  fullName,
+  employeeId,
+  reviewerName,
+  reviewedAt,
+  rejectionReason,
+}) {
+  return sendEmployeeNotificationEmail({
+    to: personalEmail,
+    subject: "Application Rejected - HR Onboarding",
+    html: buildEmployeeNotificationHtml({
+      title: "Application Rejected",
+      fullName,
+      message:
+        "Your onboarding application has been reviewed and marked as rejected. Please review the details below and contact HR.",
+      highlights: [
+        { label: "Employee ID", value: employeeId },
+        { label: "Final Status", value: "Rejected" },
+        { label: "Reviewed By", value: reviewerName },
+        { label: "Reviewed At", value: reviewedAt },
+        { label: "Reason", value: rejectionReason },
+      ],
+    }),
+  });
+}
+
+async function sendRevertedNotificationEmail({
+  personalEmail,
+  fullName,
+  employeeId,
+  reviewerName,
+  rejectionReason,
+}) {
+  return sendEmployeeNotificationEmail({
+    to: personalEmail,
+    subject: "Application Reverted - HR Onboarding",
+    html: buildEmployeeNotificationHtml({
+      title: "Application Reverted",
+      fullName,
+      message:
+        "Your previously verified record has been reverted and removed by the HR reviewer.",
+      highlights: [
+        { label: "Employee ID", value: employeeId },
+        { label: "Action Taken", value: "Reverted & Deleted" },
+        { label: "Reviewed By", value: reviewerName },
+        { label: "Reason", value: rejectionReason },
+      ],
+    }),
+  });
+}
 
 function parseCookies(req) {
   const cookieHeader = req.headers.cookie || "";
@@ -278,11 +470,20 @@ app.post("/api/onboarding/submit", async (req, res) => {
     ];
 
     const result = await pool.query(insertQuery, values);
+    const submission = result.rows[0];
+
+    await sendSubmissionNotificationEmail({
+      personalEmail,
+      fullName,
+      employeeId,
+      submissionId: submission?.id,
+      createdAt: submission?.created_at,
+    });
 
     return res.status(201).json({
       ok: true,
       message: "Application saved successfully",
-      submission: result.rows[0],
+      submission,
     });
   } catch (error) {
     console.error("Submit error:", error);
@@ -454,6 +655,13 @@ app.post("/api/admin/submissions/:id/verify", requireAdminApi, async (req, res) 
     ]);
 
     await client.query("COMMIT");
+    await sendApprovedNotificationEmail({
+      personalEmail: row.personal_email,
+      fullName: row.full_name,
+      employeeId: row.employee_id,
+      reviewerName: row.reviewer_name,
+      reviewedAt: row.reviewed_at,
+    });
     return res.json({ ok: true, message: "Employee verified successfully", row });
   } catch (error) {
     await client.query("ROLLBACK");
@@ -545,6 +753,14 @@ app.post("/api/admin/submissions/:id/reject", requireAdminApi, async (req, res) 
     ]);
 
     await client.query("COMMIT");
+    await sendRejectedNotificationEmail({
+      personalEmail: row.personal_email,
+      fullName: row.full_name,
+      employeeId: row.employee_id,
+      reviewerName: row.reviewer_name,
+      reviewedAt: row.reviewed_at,
+      rejectionReason: row.rejection_reason,
+    });
     return res.json({ ok: true, message: "Employee rejected successfully", row });
   } catch (error) {
     await client.query("ROLLBACK");
@@ -582,7 +798,7 @@ app.post(
 
       const existing = await client.query(
         `
-        SELECT id, employee_id, status
+        SELECT id, employee_id, status, full_name, personal_email
         FROM onboarding_submissions
         WHERE id = $1
         FOR UPDATE
@@ -627,6 +843,13 @@ app.post(
       }
 
       await client.query("COMMIT");
+      await sendRevertedNotificationEmail({
+        personalEmail: row.personal_email,
+        fullName: row.full_name,
+        employeeId: row.employee_id,
+        reviewerName,
+        rejectionReason,
+      });
       return res.json({
         ok: true,
         message: "Verified employee record deleted successfully",
