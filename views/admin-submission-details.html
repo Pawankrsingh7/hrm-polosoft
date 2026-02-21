@@ -1248,7 +1248,7 @@
               </button>
               ${
                 canRevertReject
-                  ? `<button id="revertRejectBtn" class="revert-reject-btn" title="Delete verified employee record">
+                  ? `<button id="revertRejectBtn" class="revert-reject-btn" title="Move verified employee to rejected">
                       <i class="bi bi-arrow-counterclockwise"></i>
                       Revert & Reject
                     </button>`
@@ -1511,7 +1511,7 @@
         return;
       }
 
-      const reason = window.prompt("Enter reason for revert and delete:");
+      const reason = window.prompt("Enter reason for revert to rejected:");
       if (reason === null) return;
       if (!reason.trim()) {
         alert("Rejection reason is required");
@@ -1519,7 +1519,7 @@
       }
 
       const confirmed = window.confirm(
-        "This will permanently delete this verified employee record from database. Continue?"
+        "This will move this verified employee to rejected status. Continue?"
       );
       if (!confirmed) return;
 
@@ -1536,14 +1536,14 @@
 
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          alert(data.message || "Failed to delete verified employee");
+          alert(data.message || "Failed to revert employee");
           return;
         }
 
-        alert("Verified employee deleted successfully");
-        window.location.href = "/admin?status=verified";
+        alert("Employee moved to rejected successfully");
+        window.location.href = "/admin?status=rejected";
       } catch (error) {
-        alert("Failed to delete verified employee");
+        alert("Failed to revert employee");
       }
     }
 

@@ -1,5 +1,6 @@
 const path = require("path");
 const crypto = require("crypto");
+const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
@@ -22,6 +23,9 @@ const SMTP_USER = process.env.SMTP_USER || "";
 const SMTP_PASS = process.env.SMTP_PASS || "";
 const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || "HR Team";
 const SMTP_FROM_EMAIL = process.env.SMTP_FROM_EMAIL || SMTP_USER;
+const COMPANY_LOGO_PATH = path.join(__dirname, "logo.png");
+const COMPANY_LOGO_CID = "company-logo";
+const hasCompanyLogo = fs.existsSync(COMPANY_LOGO_PATH);
 const mailerEnabled = Boolean(
   SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && SMTP_FROM_EMAIL
 );
@@ -104,6 +108,9 @@ function buildEmployeeNotificationHtml({ title, fullName, message, highlights = 
 
   return `
     <div style="margin:0;padding:24px;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+      <div style="max-width:640px;margin:0 auto 14px auto;text-align:center;">
+        <img src="cid:${COMPANY_LOGO_CID}" alt="Company Logo" style="max-width:220px;height:auto;display:inline-block;" />
+      </div>
       <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
         <div style="padding:18px 24px;background:#1f3b8a;color:#ffffff;">
           <h2 style="margin:0;font-size:20px;line-height:1.3;">${safeTitle}</h2>
@@ -134,6 +141,15 @@ async function sendEmployeeNotificationEmail({ to, subject, html }) {
       to,
       subject,
       html,
+      attachments: hasCompanyLogo
+        ? [
+            {
+              filename: "logo.png",
+              path: COMPANY_LOGO_PATH,
+              cid: COMPANY_LOGO_CID,
+            },
+          ]
+        : [],
     });
     return true;
   } catch (error) {
@@ -151,12 +167,12 @@ async function sendSubmissionNotificationEmail({
 }) {
   return sendEmployeeNotificationEmail({
     to: personalEmail,
-    subject: "Application Received - HR Onboarding",
+    subject: "Migration Application Received",
     html: buildEmployeeNotificationHtml({
       title: "Application Received",
       fullName,
       message:
-        "Your onboarding application has been received successfully and is now under review.",
+        "Your Migration application has been received successfully and is now under review.",
       highlights: [
         { label: "Submission ID", value: submissionId },
         { label: "Employee ID", value: employeeId },
@@ -176,12 +192,12 @@ async function sendApprovedNotificationEmail({
 }) {
   return sendEmployeeNotificationEmail({
     to: personalEmail,
-    subject: "Application Approved - HR Onboarding",
+    subject: "Migration Application Approved ",
     html: buildEmployeeNotificationHtml({
       title: "Application Approved",
       fullName,
       message:
-        "Your onboarding application has been approved after review. Welcome onboard.",
+        "Your Migration application has been approved after review.",
       highlights: [
         { label: "Employee ID", value: employeeId },
         { label: "Final Status", value: "Verified" },
@@ -202,12 +218,12 @@ async function sendRejectedNotificationEmail({
 }) {
   return sendEmployeeNotificationEmail({
     to: personalEmail,
-    subject: "Application Rejected - HR Onboarding",
+    subject: "Migration Application Rejected",
     html: buildEmployeeNotificationHtml({
       title: "Application Rejected",
       fullName,
       message:
-        "Your onboarding application has been reviewed and marked as rejected. Please review the details below and contact HR.",
+        "Your Migration application has been reviewed and marked as rejected. Please review the details below and contact HR.",
       highlights: [
         { label: "Employee ID", value: employeeId },
         { label: "Final Status", value: "Rejected" },
@@ -228,15 +244,15 @@ async function sendRevertedNotificationEmail({
 }) {
   return sendEmployeeNotificationEmail({
     to: personalEmail,
-    subject: "Application Reverted - HR Onboarding",
+    subject: "Application Reverted to Rejected",
     html: buildEmployeeNotificationHtml({
-      title: "Application Reverted",
+      title: "Application Reverted to Rejected",
       fullName,
       message:
-        "Your previously verified record has been reverted and removed by the HR reviewer.",
+        "Your previously verified record has been reviewed again and it's been marked as rejected.",
       highlights: [
         { label: "Employee ID", value: employeeId },
-        { label: "Action Taken", value: "Reverted & Deleted" },
+        { label: "Final Status", value: "Rejected" },
         { label: "Reviewed By", value: reviewerName },
         { label: "Reason", value: rejectionReason },
       ],
@@ -351,6 +367,50 @@ app.get("/api/health", async (_req, res) => {
   }
 });
 
+app.get("/api/onboarding/validate-employee-id", async (req, res) => {
+  try {
+    const employeeId = String(req.query.employeeId || "").trim();
+    if (!employeeId) {
+      return res.status(400).json({
+        ok: false,
+        allowed: false,
+        message: "Employee ID is required",
+      });
+    }
+
+    const verifiedCheck = await pool.query(
+      `
+      SELECT 1
+      FROM verified_employees
+      WHERE LOWER(TRIM(employee_id)) = LOWER(TRIM($1))
+      LIMIT 1
+      `,
+      [employeeId]
+    );
+
+    if (verifiedCheck.rowCount > 0) {
+      return res.status(409).json({
+        ok: true,
+        allowed: false,
+        message: "This employee ID has already verified and cannot apply again.",
+      });
+    }
+
+    return res.json({
+      ok: true,
+      allowed: true,
+      message: "Employee ID is available for onboarding.",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      allowed: false,
+      message: "Failed to validate employee ID",
+      error: error.message,
+    });
+  }
+});
+
 app.get("/admin/login", (req, res) => {
   const cookies = parseCookies(req);
   const token = cookies[SESSION_COOKIE_NAME];
@@ -427,7 +487,8 @@ app.post("/api/onboarding/submit", async (req, res) => {
     }
 
     const fullName = payload?.personal?.fullName || null;
-    const employeeId = payload?.personal?.employeeId || null;
+    const employeeId =
+      payload?.personal?.employeeId || payload?.employeeDetails?.employeeId || null;
     const contactNumber = payload?.personal?.contactNumber || null;
     const personalEmail = payload?.address?.personalEmail || null;
     const companyEmail = payload?.address?.companyEmail || null;
@@ -437,6 +498,24 @@ app.post("/api/onboarding/submit", async (req, res) => {
           (item) => item && (item.organization || item.designation || item.fromDate)
         )
       : false;
+
+    if (employeeId) {
+      const verifiedCheck = await pool.query(
+        `
+        SELECT 1
+        FROM verified_employees
+        WHERE LOWER(TRIM(employee_id)) = LOWER(TRIM($1))
+        LIMIT 1
+        `,
+        [employeeId]
+      );
+      if (verifiedCheck.rowCount > 0) {
+        return res.status(409).json({
+          ok: false,
+          message: "This employee ID has already verified and cannot apply again.",
+        });
+      }
+    }
 
     const insertQuery = `
       INSERT INTO onboarding_submissions
@@ -798,7 +877,7 @@ app.post(
 
       const existing = await client.query(
         `
-        SELECT id, employee_id, status, full_name, personal_email
+        SELECT id, employee_id, status, full_name, personal_email, payload
         FROM onboarding_submissions
         WHERE id = $1
         FOR UPDATE
@@ -816,7 +895,7 @@ app.post(
         await client.query("ROLLBACK");
         return res.status(400).json({
           ok: false,
-          message: "Only verified submissions can be reverted and deleted",
+          message: "Only verified submissions can be reverted to rejected",
         });
       }
 
@@ -828,40 +907,77 @@ app.post(
         });
       }
 
-      const deleted = await client.query(
+      const updated = await client.query(
         `
-        DELETE FROM onboarding_submissions
-        WHERE id = $1 AND employee_id = $2
-        RETURNING id, employee_id
+        UPDATE onboarding_submissions
+        SET status = 'Rejected',
+            reviewer_name = $1,
+            reviewed_at = NOW(),
+            rejection_reason = $2
+        WHERE id = $3 AND employee_id = $4
+        RETURNING id, employee_id, full_name, personal_email, payload, reviewer_name, reviewed_at, rejection_reason, status
         `,
-        [id, row.employee_id]
+        [reviewerName, rejectionReason, id, row.employee_id]
       );
 
-      if (deleted.rowCount === 0) {
+      if (updated.rowCount === 0) {
         await client.query("ROLLBACK");
         return res.status(404).json({ ok: false, message: "Submission not found for employee id" });
       }
 
+      const revertedRow = updated.rows[0];
+
+      await client.query(
+        `
+        INSERT INTO rejected_employees
+        (submission_id, employee_id, full_name, personal_email, payload, reviewer_name, reviewed_at, rejection_reason)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT (submission_id)
+        DO UPDATE SET
+          employee_id = EXCLUDED.employee_id,
+          full_name = EXCLUDED.full_name,
+          personal_email = EXCLUDED.personal_email,
+          payload = EXCLUDED.payload,
+          reviewer_name = EXCLUDED.reviewer_name,
+          reviewed_at = EXCLUDED.reviewed_at,
+          rejection_reason = EXCLUDED.rejection_reason
+        `,
+        [
+          revertedRow.id,
+          revertedRow.employee_id,
+          revertedRow.full_name,
+          revertedRow.personal_email,
+          revertedRow.payload,
+          revertedRow.reviewer_name,
+          revertedRow.reviewed_at,
+          revertedRow.rejection_reason,
+        ]
+      );
+
+      await client.query("DELETE FROM verified_employees WHERE submission_id = $1", [
+        revertedRow.id,
+      ]);
+
       await client.query("COMMIT");
       await sendRevertedNotificationEmail({
-        personalEmail: row.personal_email,
-        fullName: row.full_name,
-        employeeId: row.employee_id,
+        personalEmail: revertedRow.personal_email,
+        fullName: revertedRow.full_name,
+        employeeId: revertedRow.employee_id,
         reviewerName,
         rejectionReason,
       });
       return res.json({
         ok: true,
-        message: "Verified employee record deleted successfully",
+        message: "Employee reverted to rejected successfully",
         reviewerName,
         rejectionReason,
-        deleted: deleted.rows[0],
+        row: revertedRow,
       });
     } catch (error) {
       await client.query("ROLLBACK");
       return res.status(500).json({
         ok: false,
-        message: "Failed to revert and delete verified submission",
+        message: "Failed to revert verified submission",
         error: error.message,
       });
     } finally {

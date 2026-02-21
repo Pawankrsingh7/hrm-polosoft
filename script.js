@@ -18,6 +18,7 @@ class OnboardingForm {
         this.degreeNamesByType = {};
         this.specializationsByTypeAndDegree = {};
         this.universities = [];
+        this.employeeIdCheckInFlight = false;
 
         this.init();
     }
@@ -221,6 +222,17 @@ class OnboardingForm {
         const bankNameSelect = document.getElementById('bankName');
         if (bankNameSelect) {
             bankNameSelect.addEventListener('change', () => this.toggleBankOtherField());
+        }
+
+        const employeeIdInput = document.getElementById('employeeId');
+        if (employeeIdInput) {
+            employeeIdInput.addEventListener('blur', () => {
+                this.validateEmployeeIdAvailability({ showNotification: false, markField: true });
+            });
+            employeeIdInput.addEventListener('input', () => {
+                employeeIdInput.classList.remove('is-invalid');
+                this.removeFieldError(employeeIdInput);
+            });
         }
 
         // Work experience radio - set "No" as default
@@ -501,9 +513,15 @@ class OnboardingForm {
 
     configureDobAgeRule() {
         const dobInput = document.getElementById('dateOfBirth');
+        const dojInput = document.getElementById('dateOfJoining');
+        const today = new Date();
+        const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+        if (dojInput) {
+            dojInput.max = todayIso;
+        }
         if (!dobInput) return;
 
-        const today = new Date();
         const maxDob = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
         const year = maxDob.getFullYear();
         const month = String(maxDob.getMonth() + 1).padStart(2, '0');
@@ -547,6 +565,9 @@ class OnboardingForm {
 
             if (input.id === 'dateOfBirth' && input.max) {
                 config.maxDate = input.max;
+            }
+            if (input.id === 'dateOfJoining') {
+                config.maxDate = 'today';
             }
 
             flatpickr(input, config);
@@ -624,6 +645,13 @@ class OnboardingForm {
             });
         });
 
+        const cityInput = document.getElementById('city');
+        if (cityInput) {
+            cityInput.addEventListener('input', () => {
+                cityInput.value = cityInput.value.replace(/[^A-Za-z.\s'-]/g, '');
+            });
+        }
+
         const bankHolderNameInput = document.getElementById('bankHolderName');
         if (bankHolderNameInput) {
             bankHolderNameInput.addEventListener('input', () => {
@@ -637,6 +665,13 @@ class OnboardingForm {
         document.addEventListener('input', (e) => {
             if (e.target.classList?.contains('company-contact')) {
                 e.target.value = e.target.value.replace(/\D/g, '');
+            }
+            if (e.target.classList?.contains('cgpa')) {
+                e.target.value = e.target.value.replace(/[^0-9.]/g, '');
+                const parts = e.target.value.split('.');
+                if (parts.length > 2) {
+                    e.target.value = `${parts[0]}.${parts.slice(1).join('')}`;
+                }
             }
         });
     }
@@ -766,6 +801,20 @@ class OnboardingForm {
             }
         }
 
+        if (input.id === 'dateOfJoining' && value) {
+            const dateOfJoining = new Date(value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (!Number.isNaN(dateOfJoining.getTime())) {
+                dateOfJoining.setHours(0, 0, 0, 0);
+                if (dateOfJoining > today) {
+                    isValid = false;
+                    errorMessage = 'Date of Joining cannot be in the future';
+                }
+            }
+        }
+
         if (input.classList?.contains('year-of-passing') && value) {
             const yearOfPassing = new Date(value);
             const today = new Date();
@@ -777,6 +826,26 @@ class OnboardingForm {
                     isValid = false;
                     errorMessage = 'Year of Passing cannot be in the future';
                 }
+            }
+        }
+
+        if (input.id === 'city' && value) {
+            const cityRegex = /^[A-Za-z.\s'-]+$/;
+            if (!cityRegex.test(value)) {
+                isValid = false;
+                errorMessage = 'City must contain letters only';
+            }
+        }
+
+        if (input.classList?.contains('cgpa') && value) {
+            const cgpaRegex = /^\d+(\.\d+)?$/;
+            const cgpaValue = Number(value);
+            if (!cgpaRegex.test(value) || Number.isNaN(cgpaValue)) {
+                isValid = false;
+                errorMessage = 'CGPA / % must be a valid number';
+            } else if (cgpaValue > 100 || cgpaValue < 0) {
+                isValid = false;
+                errorMessage = 'CGPA / % cannot be greater than 100';
             }
         }
 
@@ -2203,9 +2272,20 @@ class OnboardingForm {
         return labelText || '';
     }
 
-    nextSection(next) {
+    async nextSection(next) {
         console.log(`Attempting to navigate to section ${next} from section ${this.currentSection}`);
         this.currentSection = this.getVisibleSectionNumber();
+
+        if (this.currentSection === 2) {
+            const employeeIdAllowed = await this.validateEmployeeIdAvailability({
+                showNotification: true,
+                markField: true
+            });
+            if (!employeeIdAllowed) {
+                this.scrollToFirstInvalid();
+                return false;
+            }
+        }
 
         if (this.validateSection(this.currentSection)) {
             // Hide current section
@@ -2779,6 +2859,12 @@ class OnboardingForm {
             return;
         }
 
+        const employeeIdAllowed = await this.validateEmployeeIdAvailability({
+            showNotification: true,
+            markField: true
+        });
+        if (!employeeIdAllowed) return;
+
         const formData = this.collectFormData();
 
         // Show loading
@@ -2828,6 +2914,46 @@ class OnboardingForm {
         } catch (error) {
             console.error('API Error:', error);
             this.showNotification(`Failed to submit application. ${error.message}`, 'error');
+        }
+    }
+
+    async validateEmployeeIdAvailability({ showNotification = false, markField = false } = {}) {
+        const employeeIdInput = document.getElementById('employeeId');
+        const employeeId = employeeIdInput?.value?.trim() || '';
+        if (!employeeId) return true;
+        if (this.employeeIdCheckInFlight) return true;
+
+        this.employeeIdCheckInFlight = true;
+        try {
+            const response = await fetch(`/api/onboarding/validate-employee-id?employeeId=${encodeURIComponent(employeeId)}`);
+            const data = await response.json().catch(() => ({}));
+
+            const allowed = Boolean(data.allowed);
+            const blockedMessage = data.message || 'This employee ID has already verified and cannot apply again.';
+
+            if (!allowed) {
+                if (markField && employeeIdInput) {
+                    employeeIdInput.classList.add('is-invalid');
+                    this.showFieldError(employeeIdInput, blockedMessage);
+                }
+                if (showNotification) {
+                    this.showNotification(blockedMessage, 'error');
+                }
+                return false;
+            }
+
+            if (employeeIdInput) {
+                employeeIdInput.classList.remove('is-invalid');
+                this.removeFieldError(employeeIdInput);
+            }
+            return true;
+        } catch (_error) {
+            if (showNotification) {
+                this.showNotification('Unable to validate Employee ID right now. Please try again.', 'error');
+            }
+            return false;
+        } finally {
+            this.employeeIdCheckInFlight = false;
         }
     }
 

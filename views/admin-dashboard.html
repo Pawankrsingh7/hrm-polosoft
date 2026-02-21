@@ -573,6 +573,12 @@
       border-radius: 20px;
     }
 
+    .id-col,
+    .form-id-col {
+      width: 120px;
+      white-space: nowrap;
+    }
+
     .status-badge {
       display: inline-flex;
       align-items: center;
@@ -852,7 +858,8 @@
                       <input type="checkbox" class="row-checkbox" id="selectAllRows">
                     </th>
                     <th>Employee</th>
-                    <th>ID</th>
+                    <th class="id-col">ID</th>
+                    <th class="form-id-col">Form ID</th>
                     <th>Status</th>
                     <th>Review Note</th>
                     <th>Submitted At</th>
@@ -860,7 +867,7 @@
                 </thead>
                 <tbody id="submissionsBody">
                   <tr>
-                    <td colspan="6" class="text-center">
+                    <td colspan="7" class="text-center">
                       <div class="loading-skeleton">
                         <div class="loading-spinner"></div>
                         <p style="color: var(--gray-500);">Loading submissions...</p>
@@ -931,6 +938,7 @@
       const filtered = currentRows.filter(row => 
         row.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         row.employee_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(row.id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         row.company_email?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       renderRows(filtered);
@@ -1032,7 +1040,7 @@
       }
 
       if (!rows.length) {
-        tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-5">No submissions found</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-5">No submissions found</td></tr>`;
         return;
       }
 
@@ -1052,7 +1060,8 @@
               </div>
             </div>
           </td>
-          <td><span class="employee-id">${escapeHtml(row.employee_id || "N/A")}</span></td>
+          <td class="id-col"><span class="employee-id">${escapeHtml(row.employee_id || "N/A")}</span></td>
+          <td class="form-id-col"><span class="employee-id">${escapeHtml(row.id || "N/A")}</span></td>
           <td>${statusBadge(row.status)}</td>
           <td><span class="review-note">${reviewNote(row)}</span></td>
           <td><span class="datetime"><i class="bi bi-clock me-1"></i>${formatDateTime(row.created_at)}</span></td>
@@ -1086,7 +1095,7 @@
     async function loadSubmissions() {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="6" class="text-center">
+          <td colspan="7" class="text-center">
             <div class="loading-skeleton">
               <div class="loading-spinner"></div>
               <p style="color: var(--gray-500);">Loading submissions...</p>
@@ -1103,7 +1112,7 @@
       }
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${escapeHtml(data.message || "Failed to load submissions")}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">${escapeHtml(data.message || "Failed to load submissions")}</td></tr>`;
         return;
       }
       
