@@ -1318,62 +1318,34 @@
 
       // Education Section
       if (education.length) {
-        if (education.length > 1) {
-          const headers = ["Level", "Qualification", "Specialization", "Year", "Board/University", "CGPA/%"];
-          const rows = education.map(edu => [
-            edu.level,
-            edu.qualification,
-            edu.specialization,
-            edu.yearOfPassing,
-            edu.boardUniversity,
-            edu.cgpa
-          ]);
-          html += createSection("Education History", "bi-mortarboard", createTable(headers, rows));
-        } else {
-          const edu = education[0];
-          let eduItems = [
-            createInfoItem("Level", edu.level),
-            createInfoItem("Qualification", edu.qualification),
-            createInfoItem("Specialization", edu.specialization),
-            createInfoItem("Year of Passing", edu.yearOfPassing),
-            createInfoItem("Board/University", edu.boardUniversity),
-            createInfoItem("CGPA/Percentage", edu.cgpa)
-          ];
-          html += createSection("Education Details", "bi-mortarboard", `<div class="info-grid">${eduItems.join('')}</div>`);
-        }
+        const headers = ["Level", "Qualification", "Specialization", "Year", "Board/University", "CGPA/%"];
+        const rows = education.map(edu => [
+          edu.level,
+          edu.qualification,
+          edu.specialization,
+          edu.yearOfPassing,
+          edu.boardUniversity,
+          edu.cgpa
+        ]);
+        html += createSection("Education History", "bi-mortarboard", createTable(headers, rows));
       } else {
         html += createSection("Education Details", "bi-mortarboard", `<p class="text-muted p-3">No education details provided</p>`);
       }
 
       // Experience Section
       if (experience.length) {
-        if (experience.length > 1) {
-          const headers = ["Organization", "Designation", "From", "To", "Address", "Contact", "CTC", "Reason"];
-          const rows = experience.map(exp => [
-            exp.organization,
-            exp.designation,
-            exp.fromDate,
-            exp.toDate || "Present",
-            exp.experienceAddress,
-            exp.companyContact,
-            exp.ctc,
-            exp.reasonForLeaving
-          ]);
-          html += createSection("Work Experience", "bi-clock-history", createTable(headers, rows));
-        } else {
-          const exp = experience[0];
-          let expItems = [
-            createInfoItem("Organization", exp.organization),
-            createInfoItem("Designation", exp.designation),
-            createInfoItem("From Date", exp.fromDate),
-            createInfoItem("To Date", exp.toDate || "Present"),
-            createInfoItem("Company Address", exp.experienceAddress),
-            createInfoItem("Company Contact", exp.companyContact),
-            createInfoItem("CTC", exp.ctc),
-            createInfoItem("Reason for Leaving", exp.reasonForLeaving)
-          ];
-          html += createSection("Work Experience", "bi-clock-history", `<div class="info-grid">${expItems.join('')}</div>`);
-        }
+        const headers = ["Organization", "Designation", "From", "To", "Address", "Contact", "CTC", "Reason"];
+        const rows = experience.map(exp => [
+          exp.organization,
+          exp.designation,
+          exp.fromDate,
+          exp.toDate || "Present",
+          exp.experienceAddress,
+          exp.companyContact,
+          exp.ctc,
+          exp.reasonForLeaving
+        ]);
+        html += createSection("Work Experience", "bi-clock-history", createTable(headers, rows));
       } else {
         html += createSection("Work Experience", "bi-clock-history", `<p class="text-muted p-3">No work experience provided</p>`);
       }
