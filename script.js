@@ -2716,7 +2716,7 @@ class OnboardingForm {
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="detailsConfirmation" />
                         <label class="form-check-label" for="detailsConfirmation">
-                            I confirm that all the details furnished by me are accurate and complete. I acknowledge that any false or incorrect information may result in strict action by the HR department.
+                            I confirm that all the details furnished by me are accurate and complete. I acknowledge that any false or incorrect information may result in strict action by the Management.
                         </label>
                     </div>
                 </div>
